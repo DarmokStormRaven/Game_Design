@@ -13,7 +13,7 @@
 local _, ns = ...
 
 -- The main panel frame. UIParent = the whole game screen.
-local Panel = CreateFrame("Frame", "VibeCtrlPanel", UIParent)
+local Panel = CreateFrame("Frame", "CozyCouchPanel", UIParent)
 ns.Panel = Panel
 
 -- WoW's names for controller buttons -> where to draw them and what color.

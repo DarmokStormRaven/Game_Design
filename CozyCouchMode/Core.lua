@@ -5,7 +5,7 @@
 --   1. Load saved settings.
 --   2. Figure out whether you're playing on controller or mouse.
 --   3. Tell the Panel (Panel.lua) to fade in or out.
---   4. Handle the /vibe chat command.
+--   4. Handle the /cozy chat command.
 -- ===============================================================
 
 -- Every add-on file receives two values from WoW: the add-on's folder
@@ -21,9 +21,9 @@ local DEFAULTS = {
 }
 
 -- Short helper to print a colored message in the chat window.
--- |cff9d7bff ... |r is WoW's color code: "start purple ... reset color".
+-- |cffffb347 ... |r is WoW's color code: "start warm amber ... reset color".
 function ns.Print(...)
-    print("|cff9d7bffVibe|r", ...)
+    print("|cffffb347Cozy|r", ...)
 end
 
 function ns.Debug(...)
@@ -71,11 +71,11 @@ events:SetScript("OnEvent", function(self, event, ...)
 
         -- Saved settings are ready now. Create them if this is the first run,
         -- and fill in any new default settings added in later versions.
-        VibeCtrlDB = VibeCtrlDB or {}
+        CozyCouchModeDB = CozyCouchModeDB or {}
         for key, value in pairs(DEFAULTS) do
-            if VibeCtrlDB[key] == nil then VibeCtrlDB[key] = value end
+            if CozyCouchModeDB[key] == nil then CozyCouchModeDB[key] = value end
         end
-        ns.db = VibeCtrlDB
+        ns.db = CozyCouchModeDB
 
     elseif event == "PLAYER_LOGIN" then
         ns.Panel:Setup()
@@ -84,7 +84,7 @@ events:SetScript("OnEvent", function(self, event, ...)
            and not IsUsingMouse() then
             ns.SetMode("gamepad")
         end
-        ns.Print("ready! Type |cffffd100/vibe|r for commands.")
+        ns.Print("ready! Type |cffffd100/cozy|r for commands.")
 
     elseif event == "GAME_PAD_ACTIVE_CHANGED" then
         local isActive = ...
@@ -96,10 +96,11 @@ events:SetScript("OnEvent", function(self, event, ...)
 end)
 
 -- ---------------------------------------------------------------
--- Slash command: /vibe
+-- Slash commands: /cozy (or /couch)
 -- ---------------------------------------------------------------
-SLASH_VIBECTRL1 = "/vibe"
-SlashCmdList.VIBECTRL = function(msg)
+SLASH_COZYCOUCH1 = "/cozy"
+SLASH_COZYCOUCH2 = "/couch"
+SlashCmdList.COZYCOUCH = function(msg)
     local cmd = strtrim(msg or ""):lower()
 
     if cmd == "show" then          -- force the panel on (for testing)

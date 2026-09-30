@@ -1,15 +1,15 @@
 ## Interface: 120100
-## Title: Vibe Controlling
-## Notes: A calm, minimalist controller UI with smooth animations and activity presets.
+## Title: Cozy Couch Mode
+## Notes: Kick back with a controller: a calm, minimalist UI with smooth animations and activity presets. From the Tavern under the Stairs.
 ## Author: DarmokStormRaven
 ## Version: 0.1.0
-## SavedVariables: VibeCtrlDB
+## SavedVariables: CozyCouchModeDB
 
 # ---------------------------------------------------------------
 # This is the "table of contents" file. WoW reads it first.
 #  - Lines starting with "## " are settings (metadata) for WoW.
 #  - "Interface" = the game version this add-on was built for.
-#    If WoW calls the add-on "out of date", type /vibe status in-game
+#    If WoW calls the add-on "out of date", type /cozy status in-game
 #    and put the number it prints here.
 #  - "SavedVariables" = a global table WoW saves to disk when you log out,
 #    so your settings survive restarts.
