@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cozy Menu Mockup</title>
+<!--
+  Cozy Couch Mode — Cozy Menu mockup (design only, not game code).
+  Textures: Ryan's licensed Wooden UI pack (copied into ./art).
+  Fonts: Melon Honey (installed locally on Ryan's PC), Cinzel + Spectral (Google Fonts).
+  The scene behind the menu is a stand-in for the game world.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #f0b73e;
+  --gold-hi: #ffd770;
+  --text: #f5e8c8;
+  --text-dim: #b8a988;
+  --ink: #3b2410;
+  --ink-soft: #5c4229;
+  /* Face-button colors: same hues as the in-game diamond (Panel.lua) */
+  --pad-a: #7ee08f;
+  --pad-b: #f27a6e;
+  --pad-x: #78aef5;
+  --pad-y: #f2d461;
+  --display: 'Melon Honey', 'Cinzel', serif;
+  --title: 'Cinzel', serif;
+  --body: 'Spectral', Georgia, serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #050403; color: var(--text); font-family: var(--body); overflow: hidden; }
+
+/* ── Stage: a fixed 1280x720 "game screen", scaled to fit ── */
+#wrap { position: fixed; inset: 0 0 64px 0; overflow: hidden; }
+#stage { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; overflow: hidden; background: #000; }
+
+/* ── Stand-in game world: dusk over a hillside tavern ── */
+.world {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 30% 22% at 72% 64%, rgba(255, 186, 110, .55), transparent 70%),
+    linear-gradient(180deg, #171428 0%, #2a2140 32%, #553647 52%, #a5603c 63%, #c9824a 66.6%, #2b1d14 66.8%, #18110b 100%);
+}
+.hill { position: absolute; border-radius: 50%; }
+.h1 { left: -12%; width: 68%; height: 260px; top: 432px; background: #2b1c22; }
+.h2 { left: 42%; width: 76%; height: 300px; top: 450px; background: #23171c; }
+.h3 { left: -6%; width: 112%; height: 380px; top: 548px; background: #130d09; }
+.tree { position: absolute; background: #150d10; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.house { position: absolute; left: 236px; top: 384px; width: 128px; height: 74px; background: #1b1116; clip-path: polygon(0 42%, 50% 0, 100% 42%, 100% 100%, 0 100%); }
+.chimney { position: absolute; left: 330px; top: 380px; width: 12px; height: 26px; background: #1b1116; }
+.win { position: absolute; width: 13px; height: 15px; background: #ffb65e; border-radius: 2px; box-shadow: 0 0 14px 4px rgba(255, 170, 70, .55); animation: flicker 3.2s ease-in-out infinite; }
+@keyframes flicker { 0%, 100% { opacity: .95; } 45% { opacity: .78; } 60% { opacity: 1; } }
+.star { position: absolute; border-radius: 50%; background: #fff6dc; animation: twinkle 4s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: .25; } 50% { opacity: .9; } }
+.fly { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #ffe39a; box-shadow: 0 0 8px 3px rgba(255, 210, 110, .55); animation: drift 9s ease-in-out infinite alternate; }
+@keyframes drift {
+  0% { transform: translate(0, 0); opacity: .15; }
+  30% { opacity: .9; }
+  100% { transform: translate(40px, -36px); opacity: .25; }
+}
+/* Pretend-combat: red pulse at the screen edges */
+.world::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 180px 30px rgba(170, 25, 15, .55); opacity: 0; transition: opacity .4s; pointer-events: none; }
+.combat .world::after { opacity: 1; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+
+/* Menu-open dimmer (the game can dim the world, not blur it) */
+.dim { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(8, 5, 2, .5), rgba(4, 2, 1, .82)); opacity: 0; transition: opacity .3s; pointer-events: none; }
+.open .dim { opacity: 1; }
+
+/* ── Controller glyphs ── */
+.gem {
+  position: relative; display: inline-grid; place-items: center; flex: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  font: 700 12px/1 var(--title); color: var(--c);
+  text-shadow: 0 0 6px var(--c), 0 1px 1px #000;
+  background: radial-gradient(circle at 38% 32%, #5a3d27, #1c1008 70%);
+  box-shadow: 0 0 0 1.5px #24150a, 0 0 0 3px #b98b4e, 0 2px 4px rgba(0, 0, 0, .6);
+}
+.g-a { --c: var(--pad-a); }
+.g-b { --c: var(--pad-b); }
+.g-x { --c: var(--pad-x); }
+.g-y { --c: var(--pad-y); }
+
+/* ── HUD: the button diamond (menu closed) ── */
+#hud { position: absolute; inset: 0; pointer-events: none; transition: opacity .3s; }
+.open #hud { opacity: 0; }
+.ptag {
+  position: absolute; left: 550px; top: 432px; width: 180px; height: 36px;
+  background: url(art/Tex_Plank_07.png) center / 100% 100% no-repeat;
+  display: grid; place-items: center;
+  font: 20px/1 var(--display); color: var(--gold-hi);
+  text-shadow: 0 2px 0 #4a2a0c, 0 0 6px rgba(0, 0, 0, .6);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .6));
+  transition: filter .3s;
+}
+.ptag .auto { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); font: 700 11px/1 var(--title); letter-spacing: .14em; color: var(--pad-b); text-shadow: 0 0 6px rgba(242, 122, 110, .7); opacity: 0; transition: opacity .3s; }
+.combat .ptag { filter: drop-shadow(0 0 10px rgba(220, 60, 40, .8)); }
+.combat .ptag .auto { opacity: 1; }
+.sockpad {
+  position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%;
+  background: url(art/Tex_circle_bg.png) center / 100% 100%;
+  display: grid; place-items: center;
+  transition: transform .2s ease-in-out, box-shadow .3s;
+}
+.sockpad::after { content: ""; position: absolute; inset: -5px; background: url(art/Tex_frame_c_01.png) center / 100% 100% no-repeat; }
+.sockpad img { width: 36px; height: 36px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .7)); transition: opacity .2s; }
+.sockpad .gem { position: absolute; right: -8px; bottom: -6px; z-index: 2; }
+.sockpad.pop { transform: scale(1.18); box-shadow: 0 0 22px 6px var(--c); transition-duration: .08s; }
+.sockpad .lbl {
+  position: absolute; white-space: nowrap;
+  font: 600 14px/1 var(--body); color: var(--text);
+  background: rgba(12, 8, 4, .6); padding: 4px 9px; border-radius: 10px;
+  text-shadow: 0 1px 2px #000;
+}
+.s-a { left: 640px; top: 652px; --c: var(--pad-a); }
+.s-b { left: 702px; top: 590px; --c: var(--pad-b); }
+.s-x { left: 578px; top: 590px; --c: var(--pad-x); }
+.s-y { left: 640px; top: 528px; --c: var(--pad-y); }
+.s-a .lbl { top: calc(100% + 9px); left: 50%; transform: translateX(-50%); }
+.s-y .lbl { bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%); }
+.s-x .lbl { right: calc(100% + 12px); top: 50%; transform: translateY(-50%); }
+.s-b .lbl { left: calc(100% + 14px); top: 50%; transform: translateY(-50%); }
+.chip.openhint { position: absolute; right: 22px; bottom: 18px; }
+
+/* "Socket + plank" chip, same piece as the GM panel's Present / Inventory buttons */
+.chip { position: relative; width: 130px; height: 52px; background: url(art/tex_butn_plank.png) center / 100% 100% no-repeat; display: flex; align-items: center; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .55)); }
+.chip .sock { width: 52px; height: 52px; display: grid; place-items: center; flex: none; }
+.chip .t { flex: 1; text-align: center; padding-right: 10px; font: 600 11.5px/1.1 var(--title); letter-spacing: .1em; text-transform: uppercase; color: var(--text); }
+.chip .sock svg { width: 24px; height: 24px; }
+.chip .duo { font: 700 10px/1 var(--title); color: var(--gold-hi); letter-spacing: .04em; }
+
+/* ── The Cozy Menu ── */
+#menu { position: absolute; inset: 0; opacity: 0; transform: scale(.96); pointer-events: none; transition: opacity .26s ease, transform .32s cubic-bezier(.2, .8, .2, 1); }
+.open #menu { opacity: 1; transform: none; pointer-events: auto; }
+
+.sign { position: absolute; left: 330px; top: 18px; width: 620px; height: 130px; background: url(art/Tex_Plank_12_bg.png) center / 100% 100% no-repeat; z-index: 3; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .6)); }
+.sign .word { position: absolute; top: 46px; width: 200px; text-align: center; font: 46px/1 var(--display); color: #f2b544; text-shadow: 0 2px 0 #6b3d12, 0 4px 8px rgba(0, 0, 0, .55); }
+.sign .w1 { left: 52px; }
+.sign .w2 { right: 52px; }
+.medal-lg { position: absolute; left: 254px; top: 6px; width: 112px; height: 112px; border-radius: 50%; background: url(art/Tex_Plank_12_1.png) center / 100% 100%; display: grid; place-items: center; }
+.medal-lg::after { content: ""; position: absolute; inset: -6px; background: url(art/Tex_frame_c_01.png) center / 100% 100% no-repeat; }
+.medal-lg svg { width: 74px; height: 50px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .7)); }
+
+.panel {
+  position: absolute; left: 180px; top: 100px; width: 920px; height: 540px;
+  border: 22px solid transparent;
+  border-image: url(art/Tex_frame.png) 30 / 22px stretch;
+  background: linear-gradient(rgba(14, 8, 3, .38), rgba(14, 8, 3, .5)), url(art/Tex_board.png) top center / 100% auto repeat-y;
+  background-clip: padding-box;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .7));
+}
+
+.tabs { position: absolute; top: 160px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 10px; z-index: 2; }
+.tab {
+  width: 132px; height: 40px; border: 10px solid transparent;
+  border-image: url(art/mid_button_off.PNG) 26 fill / 10px stretch;
+  display: grid; place-items: center;
+  font: 600 12.5px/1 var(--title); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-dim); cursor: pointer; transition: color .15s;
+}
+.tab.on { border-image-source: url(art/mid_button_on.PNG); color: var(--gold-hi); text-shadow: 0 0 8px rgba(255, 190, 80, .7); }
+.shoulder { font: 700 11px/1 var(--title); color: var(--text-dim); padding: 7px 10px; border-radius: 12px; background: #1a110a; box-shadow: inset 0 0 0 1px #6b4f2e; letter-spacing: .08em; margin: 0 4px; }
+
+.heading { position: absolute; top: 207px; left: 0; right: 0; text-align: center; font: 31px/1 var(--display); color: var(--gold); text-shadow: 0 2px 0 #4a2a0c, 0 0 14px rgba(240, 183, 62, .25); z-index: 2; }
+
+.cards { position: absolute; top: 306px; left: 0; right: 0; display: flex; justify-content: center; gap: 34px; z-index: 2; }
+.card {
+  position: relative; width: 250px; height: 232px; padding: 52px 22px 0;
+  background: url(art/Tex_bg_01_02.png) center / 100% 100% no-repeat;
+  color: var(--ink); text-align: center; cursor: pointer;
+  transition: transform .22s cubic-bezier(.2, .8, .2, 1), filter .22s;
+  filter: brightness(.74) saturate(.8) drop-shadow(0 6px 8px rgba(0, 0, 0, .55));
+}
+/* Focus glow follows the ragged parchment edge (drop-shadow uses the image's shape) */
+.card.focus { transform: translateY(-8px) scale(1.035); filter: brightness(1.05) drop-shadow(0 0 10px rgba(255, 196, 90, .75)) drop-shadow(0 10px 14px rgba(0, 0, 0, .6)); animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe {
+  0%, 100% { filter: brightness(1.05) drop-shadow(0 0 8px rgba(255, 196, 90, .55)) drop-shadow(0 10px 14px rgba(0, 0, 0, .6)); }
+  50% { filter: brightness(1.08) drop-shadow(0 0 20px rgba(255, 196, 90, .95)) drop-shadow(0 10px 14px rgba(0, 0, 0, .6)); }
+}
+.card .medal { position: absolute; left: 50%; top: -44px; width: 88px; height: 88px; margin-left: -44px; border-radius: 50%; background: url(art/Tex_circle_bg.png) center / 100% 100%; display: grid; place-items: center; }
+.card .medal::after { content: ""; position: absolute; inset: -5px; background: url(art/Tex_frame_c_01.png) center / 100% 100% no-repeat; }
+.card .medal img { width: 58px; height: 58px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .6)); }
+.card h3 { margin: 0; font: 28px/1.1 var(--display); font-weight: normal; color: var(--ink); }
+.card .tag { margin: 5px 0 0; font: italic 14.5px/1.3 var(--body); color: var(--ink-soft); }
+.card .rule { position: relative; height: 2px; width: 176px; margin: 14px auto 16px; background: linear-gradient(90deg, transparent, rgba(91, 58, 25, .6) 20%, rgba(91, 58, 25, .6) 80%, transparent); }
+.card .rule::after { content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; transform: rotate(45deg); background: #8a5a2b; box-shadow: 0 0 0 2px #e8cf9f; }
+.map { list-style: none; margin: 0 auto; padding: 0; width: 200px; display: grid; grid-template-columns: 1fr 1fr; row-gap: 10px; column-gap: 6px; text-align: left; }
+.map li { display: flex; align-items: center; gap: 8px; font: 600 14px/1 var(--body); color: var(--ink); white-space: nowrap; }
+.ribbon {
+  position: absolute; left: 50%; bottom: -21px; width: 172px; height: 37px; margin-left: -86px;
+  background: url(art/Tex_title.png) center / 100% 100% no-repeat;
+  display: grid; place-items: center; padding-bottom: 6px;
+  font: 700 11.5px/1 var(--title); letter-spacing: .18em; text-transform: uppercase; color: var(--ink);
+  opacity: 0; transform: scale(.7); transition: opacity .2s, transform .3s cubic-bezier(.2, 1.5, .4, 1);
+}
+.card.active .ribbon { opacity: 1; transform: none; }
+
+.soon { position: absolute; top: 290px; left: 50%; width: 520px; height: 220px; margin-left: -260px; padding: 58px 40px 0; background: url(art/Tex_bg_01_02.png) center / 100% 100% no-repeat; text-align: center; color: var(--ink); display: none; z-index: 2; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .55)); }
+.soon .medal { position: absolute; left: 50%; top: -44px; width: 88px; height: 88px; margin-left: -44px; border-radius: 50%; background: url(art/Tex_circle_bg.png) center / 100% 100%; display: grid; place-items: center; }
+.soon .medal::after { content: ""; position: absolute; inset: -5px; background: url(art/Tex_frame_c_01.png) center / 100% 100% no-repeat; }
+.soon .medal img { width: 54px; height: 54px; }
+.soon h3 { margin: 0; font: 30px/1.1 var(--display); font-weight: normal; }
+.soon p { margin: 10px 0 0; font: italic 16px/1.4 var(--body); color: var(--ink-soft); }
+.soon .pill { display: inline-block; margin-top: 16px; font: 700 11px/1 var(--title); letter-spacing: .16em; text-transform: uppercase; color: var(--ink); background: rgba(91, 58, 25, .16); padding: 6px 12px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(91, 58, 25, .35); }
+.tab-other .cards { display: none; }
+.tab-other .soon { display: block; }
+
+.hints { position: absolute; top: 566px; left: 0; right: 0; display: flex; justify-content: center; gap: 16px; z-index: 2; }
+.brand { position: absolute; top: 652px; left: 0; right: 0; text-align: center; font: 19px/1 var(--display); color: #c9a76a; opacity: .85; text-shadow: 0 2px 4px rgba(0, 0, 0, .8); }
+
+/* ── Toast ── */
+#toast {
+  position: absolute; left: 50%; top: 28px; width: 400px; height: 76px; margin-left: -200px; z-index: 20;
+  background: url(art/Tex_obj_06_01.png) center / 100% 100% no-repeat;
+  display: flex; align-items: center; justify-content: center; padding: 0 34px 4px;
+  font: 600 16px/1.2 var(--body); color: var(--ink); text-align: center;
+  opacity: 0; transform: translateY(-16px); transition: opacity .25s, transform .3s cubic-bezier(.2, .8, .2, 1);
+  pointer-events: none; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .6));
+}
+#toast.show { opacity: 1; transform: none; }
+
+/* ── Mockup control bar (not part of the design) ── */
+#mockbar { position: fixed; left: 0; right: 0; bottom: 0; min-height: 52px; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 6px 14px; padding: 8px 16px; background: #120c07; border-top: 1px solid #3a2e22; font: 13.5px/1.3 var(--body); color: var(--text-dim); white-space: nowrap; }
+#mockbar b { color: var(--gold); font: 700 12px/1 var(--title); letter-spacing: .14em; }
+#mockbar kbd { font: 600 11px/1 var(--title); color: var(--text); background: #2a1d12; border: 1px solid #6b4f2e; border-radius: 4px; padding: 3px 6px; }
+#mockbar button { font: 600 12px/1 var(--title); letter-spacing: .08em; color: var(--gold-hi); background: #2a1d12; border: 1px solid #6b4f2e; border-radius: 6px; padding: 9px 12px; cursor: pointer; }
+#mockbar button.on { background: #5a1a12; border-color: #b03838; }
+#pad.ok { color: var(--pad-a); }
+.sep { color: #4a3b2b; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <!-- Stand-in game world -->
+    <div class="world" id="world">
+      <div class="hill h1"></div>
+      <div class="hill h2"></div>
+      <div class="tree" style="left:120px;top:392px;width:46px;height:96px"></div>
+      <div class="tree" style="left:160px;top:410px;width:38px;height:80px"></div>
+      <div class="tree" style="left:900px;top:404px;width:52px;height:110px"></div>
+      <div class="tree" style="left:948px;top:426px;width:40px;height:90px"></div>
+      <div class="tree" style="left:1120px;top:415px;width:48px;height:104px"></div>
+      <div class="chimney"></div>
+      <div class="house"></div>
+      <div class="win" style="left:262px;top:428px"></div>
+      <div class="win" style="left:322px;top:428px;animation-delay:-1.4s"></div>
+      <div class="hill h3"></div>
+    </div>
+    <div class="dim"></div>
+
+    <!-- HUD: the button diamond (shows the preset in use) -->
+    <div id="hud">
+      <div class="ptag"><span id="ptag-name">Vibe Farming</span><span class="auto">AUTO</span></div>
+      <div class="sockpad s-y" id="s-Y"><img alt=""><span class="gem g-y">Y</span><span class="lbl"></span></div>
+      <div class="sockpad s-x" id="s-X"><img alt=""><span class="gem g-x">X</span><span class="lbl"></span></div>
+      <div class="sockpad s-b" id="s-B"><img alt=""><span class="gem g-b">B</span><span class="lbl"></span></div>
+      <div class="sockpad s-a" id="s-A"><img alt=""><span class="gem g-a">A</span><span class="lbl"></span></div>
+      <div class="chip openhint">
+        <div class="sock"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="10" height="9" rx="2" fill="none" stroke="#f5e8c8" stroke-width="1.8"/><rect x="7" y="8" width="10" height="9" rx="2" fill="#2a160c" stroke="#f5e8c8" stroke-width="1.8"/></svg></div>
+        <span class="t">Cozy Menu</span>
+      </div>
+    </div>
+
+    <!-- The Cozy Menu -->
+    <div id="menu">
+      <div class="panel"></div>
+      <div class="sign">
+        <div class="word w1">Cozy</div>
+        <div class="medal-lg">
+          <svg viewBox="0 0 64 42" aria-hidden="true">
+            <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7d58a"/><stop offset=".55" stop-color="#d99a45"/><stop offset="1" stop-color="#8a5422"/></linearGradient></defs>
+            <path d="M14 6h36c7 0 11 5 12.5 12l1.3 9c1 7-3.5 12-8.5 12-4 0-6-2.5-8.5-6l-2-3H29.2l-2 3c-2.5 3.5-4.5 6-8.5 6-5 0-9.5-5-8.5-12l1.3-9C3 11 7 6 14 6z" transform="translate(-3 -2)" fill="url(#cg)" stroke="#3a210c" stroke-width="2"/>
+            <path d="M14 10h4v4h4v4h-4v4h-4v-4h-4v-4h4z" fill="#3a210c"/>
+            <circle cx="44" cy="11.5" r="2.6" fill="#3a210c"/><circle cx="44" cy="20.5" r="2.6" fill="#3a210c"/>
+            <circle cx="39.5" cy="16" r="2.6" fill="#3a210c"/><circle cx="48.5" cy="16" r="2.6" fill="#3a210c"/>
+          </svg>
+        </div>
+        <div class="word w2">Couch</div>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <span class="shoulder">LB</span>
+        <div class="tab" data-i="0">Presets</div>
+        <div class="tab" data-i="1">Layout</div>
+        <div class="tab" data-i="2">Look</div>
+        <div class="tab" data-i="3">Settings</div>
+        <span class="shoulder">RB</span>
+      </div>
+
+      <div class="heading" id="heading">How are we playing tonight?</div>
+      <div class="cards" id="cards"></div>
+      <div class="soon" id="soon">
+        <div class="medal"><img id="soon-icon" alt=""></div>
+        <h3 id="soon-title"></h3>
+        <p id="soon-text"></p>
+        <span class="pill">Coming in a later step</span>
+      </div>
+
+      <div class="hints">
+        <div class="chip"><div class="sock"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 2h4v6h6v4h-6v6H8v-6H2V8h6z" fill="#f5e8c8"/></svg></div><span class="t">Move</span></div>
+        <div class="chip"><div class="sock"><span class="gem g-a">A</span></div><span class="t">Choose</span></div>
+        <div class="chip"><div class="sock"><span class="gem g-b">B</span></div><span class="t">Close</span></div>
+        <div class="chip"><div class="sock"><span class="duo">LB RB</span></div><span class="t">Tabs</span></div>
+      </div>
+      <div class="brand">from the Tavern under the Stairs</div>
+    </div>
+
+    <div id="toast"><span></span></div>
+  </div>
+</div>
+
+<div id="mockbar">
+  <b>MOCKUP</b>
+  <span id="pad">Controller: press any button</span>
+  <span class="sep">|</span>
+  <span>Open <kbd>Back</kbd> <kbd>M</kbd></span>
+  <span>Move <kbd>D-pad</kbd> <kbd>&larr; &rarr;</kbd></span>
+  <span>Choose <kbd>A</kbd> <kbd>Enter</kbd></span>
+  <span>Close <kbd>B</kbd> <kbd>Esc</kbd></span>
+  <span>Tabs <kbd>LB RB</kbd> <kbd>Q E</kbd></span>
+  <span>Try buttons <kbd>A B X Y</kbd> <kbd>1-4</kbd></span>
+  <span class="sep">|</span>
+  <button id="combatBtn" type="button">Pretend combat <kbd>Start</kbd> <kbd>C</kbd></button>
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────
+// Button actions are placeholders; real spells fill these in step 5 (auto-map).
+const PRESETS = [
+  { name: 'Vibe Farming', tag: 'Herbs, ore and slow sunsets.', icon: 'Cursor_Production.PNG',
+    map: { A: ['Interact', 'Cursor_Hand.PNG'], B: ['Jump', 'Cursor_Move1.PNG'], X: ['Gather', 'Cursor_Production.PNG'], Y: ['Bags', 'Cursor_loot.PNG'] } },
+  { name: 'Questing', tag: 'Chat with folks, follow the trail.', icon: 'Cursor_book.PNG',
+    map: { A: ['Interact', 'Cursor_Hand.PNG'], B: ['Jump', 'Cursor_Move1.PNG'], X: ['Quest item', 'Cursor_Flask.PNG'], Y: ['Quest log', 'Cursor_book.PNG'] } },
+  { name: 'Combat', tag: 'For when the tavern gets rowdy.', icon: 'Cursor_Attack.PNG',
+    map: { A: ['Attack', 'Cursor_Attack.PNG'], B: ['Defend', 'Cursor_Deff.PNG'], X: ['Big hit', 'Cursor_Hand2.PNG'], Y: ['Heal', 'Cursor_Flask.PNG'] } },
+];
+const COMBAT_PRESET = 2;
+const HEADINGS = ['How are we playing tonight?', 'Make it yours', 'Pick a vibe', 'Little comforts'];
+const SOON = {
+  1: { icon: 'Cursor_Move1.PNG', title: 'Your Layout', text: 'Move and resize your buttons, right from the couch.' },
+  2: { icon: 'option_button.PNG', title: 'Look & Feel', text: 'Themes, glow, and how gently things fade in and out.' },
+  3: { icon: 'Cursor_Settings.PNG', title: 'Settings', text: 'Choose the menu button, sounds, and other small comforts.' },
+};
+const KEYS = ['A', 'B', 'X', 'Y'];
+
+const S = { open: false, tab: 0, focus: 0, active: 0, combat: false, busy: false };
+const $ = (sel) => document.querySelector(sel);
+const stage = $('#stage');
+
+// ── Stand-in world: stars + fireflies ────────────────────────────
+(function buildSky() {
+  const world = $('#world');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    const size = Math.random() < .2 ? 2.5 : 1.5;
+    s.className = 'star';
+    s.style.cssText = `left:${Math.random() * 1280}px;top:${Math.random() * 300}px;width:${size}px;height:${size}px;animation-delay:${-Math.random() * 4}s`;
+    world.insertBefore(s, world.firstChild);
+  }
+  for (let i = 0; i < 18; i++) {
+    const f = document.createElement('div');
+    f.className = 'fly';
+    f.style.cssText = `left:${Math.random() * 1240}px;top:${470 + Math.random() * 220}px;animation-duration:${7 + Math.random() * 6}s;animation-delay:${-Math.random() * 10}s`;
+    world.appendChild(f);
+  }
+})();
+
+// ── Build the preset cards ───────────────────────────────────────
+const gem = (k) => `<span class="gem g-${k.toLowerCase()}">${k}</span>`;
+const cardsEl = $('#cards');
+PRESETS.forEach((p, i) => {
+  const c = document.createElement('div');
+  c.className = 'card';
+  c.innerHTML =
+    `<div class="medal"><img src="art/${p.icon}" alt=""></div>` +
+    `<h3>${p.name}</h3><p class="tag">${p.tag}</p><div class="rule"></div>` +
+    `<ul class="map">${KEYS.map((k) => `<li>${gem(k)}<span>${p.map[k][0]}</span></li>`).join('')}</ul>` +
+    `<div class="ribbon">In use</div>`;
+  c.addEventListener('mouseenter', () => { if (S.open && S.tab === 0) { S.focus = i; renderMenu(); } });
+  c.addEventListener('click', () => { S.focus = i; renderMenu(); choose(); });
+  cardsEl.appendChild(c);
+});
+document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { S.tab = +t.dataset.i; renderMenu(); }));
+$('.openhint').style.pointerEvents = 'auto';
+$('.openhint').style.cursor = 'pointer';
+$('.openhint').addEventListener('click', () => setOpen(true));
+
+// ── Rendering ────────────────────────────────────────────────────
+function renderMenu() {
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', +t.dataset.i === S.tab));
+  $('#heading').textContent = HEADINGS[S.tab];
+  stage.classList.toggle('tab-other', S.tab !== 0);
+  if (S.tab !== 0) {
+    const s = SOON[S.tab];
+    $('#soon-icon').src = 'art/' + s.icon;
+    $('#soon-title').textContent = s.title;
+    $('#soon-text').textContent = s.text;
+  }
+  [...cardsEl.children].forEach((c, i) => {
+    c.classList.toggle('focus', i === S.focus);
+    c.classList.toggle('active', i === S.active);
+  });
+}
+
+function renderHUD() {
+  const p = PRESETS[S.combat ? COMBAT_PRESET : S.active];
+  KEYS.forEach((k) => {
+    const s = $('#s-' + k);
+    s.querySelector('img').src = 'art/' + p.map[k][1];
+    s.querySelector('.lbl').textContent = p.map[k][0];
+  });
+  $('#ptag-name').textContent = p.name;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.firstElementChild.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ── Actions ──────────────────────────────────────────────────────
+function setOpen(v) {
+  if (S.busy) return;
+  if (v && S.combat) { toast('The Cozy Menu opens after combat.'); return; }
+  S.open = v;
+  if (v) { S.tab = 0; S.focus = S.active; renderMenu(); }
+  stage.classList.toggle('open', v);
+}
+function move(d) {
+  if (S.tab !== 0) return;
+  S.focus = (S.focus + d + PRESETS.length) % PRESETS.length;
+  renderMenu();
+}
+function tabStep(d) {
+  S.tab = (S.tab + d + 4) % 4;
+  renderMenu();
+}
+function choose() {
+  if (!S.open || S.busy || S.tab !== 0) return;
+  S.active = S.focus;
+  S.busy = true;
+  renderMenu();                       // ribbon pops onto the chosen card
+  setTimeout(() => {
+    S.busy = false;
+    setOpen(false);
+    renderHUD();
+    toast(`${PRESETS[S.active].name} is on. Enjoy.`);
+  }, 420);
+}
+function press(k) {
+  const s = $('#s-' + k);
+  s.classList.add('pop');
+  setTimeout(() => s.classList.remove('pop'), 110);
+}
+function setCombat(v) {
+  S.combat = v;
+  stage.classList.toggle('combat', v);
+  $('#combatBtn').classList.toggle('on', v);
+  if (v) {
+    if (S.open) { S.open = false; stage.classList.remove('open'); toast('Combat! Menu tucked away.'); }
+    else toast('Combat! Switched to your Combat buttons.');
+  } else {
+    toast(`All calm. Back to ${PRESETS[S.active].name}.`);
+  }
+  renderHUD();
+}
+$('#combatBtn').addEventListener('click', (e) => { setCombat(!S.combat); e.currentTarget.blur(); });
+
+// ── Keyboard ─────────────────────────────────────────────────────
+addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (k === 'c' || k === 'C') return setCombat(!S.combat);
+  if (k === 'm' || k === 'M') return setOpen(!S.open);
+  if (S.open) {
+    if (k === 'ArrowLeft') { move(-1); e.preventDefault(); }
+    else if (k === 'ArrowRight') { move(1); e.preventDefault(); }
+    else if (k === 'Enter' || k === ' ') { choose(); e.preventDefault(); }
+    else if (k === 'Escape' || k === 'Backspace') setOpen(false);
+    else if (k === 'q' || k === 'Q') tabStep(-1);
+    else if (k === 'e' || k === 'E') tabStep(1);
+  } else {
+    const map = { 1: 'A', 2: 'B', 3: 'X', 4: 'Y' };
+    if (map[k]) press(map[k]);
+  }
+});
+
+// ── Controller (browser Gamepad API, standard button layout) ────
+// 0 A · 1 B · 2 X · 3 Y · 4 LB · 5 RB · 8 Back · 9 Start · 14 left · 15 right
+const prev = [];
+let stickHeld = 0;
+function setPadStatus(on) {
+  const el = $('#pad');
+  el.textContent = on ? 'Controller connected' : 'Controller: press any button';
+  el.classList.toggle('ok', on);
+}
+addEventListener('gamepadconnected', () => setPadStatus(true));
+addEventListener('gamepaddisconnected', () => setPadStatus(false));
+function poll() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  let gp = null;
+  for (const p of pads) if (p && p.connected) { gp = p; break; }
+  if (gp) {
+    if (!$('#pad').classList.contains('ok')) setPadStatus(true);
+    const hit = [];
+    gp.buttons.forEach((b, i) => { hit[i] = b.pressed && !prev[i]; prev[i] = b.pressed; });
+    if (hit[9]) setCombat(!S.combat);
+    else if (hit[8]) setOpen(!S.open);
+    else if (S.open) {
+      if (hit[14]) move(-1);
+      if (hit[15]) move(1);
+      if (hit[0]) choose();
+      if (hit[1]) setOpen(false);
+      if (hit[4]) tabStep(-1);
+      if (hit[5]) tabStep(1);
+      const ax = gp.axes[0] || 0;
+      if (Math.abs(ax) > .6) { if (!stickHeld) { stickHeld = Math.sign(ax); move(stickHeld); } }
+      else if (Math.abs(ax) < .3) stickHeld = 0;
+    } else {
+      KEYS.forEach((k, i) => { if (hit[i]) press(k); });
+    }
+  }
+  requestAnimationFrame(poll);
+}
+requestAnimationFrame(poll);
+
+// ── Fit the 1280x720 stage to the window ─────────────────────────
+function fit() {
+  const wrap = $('#wrap');
+  wrap.style.bottom = $('#mockbar').offsetHeight + 'px';   // the control bar can wrap to two lines
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const s = Math.min(W / 1280, H / 720);
+  stage.style.transform = `translate(${(W - 1280 * s) / 2}px, ${(H - 720 * s) / 2}px) scale(${s})`;
+}
+addEventListener('resize', fit);
+fit();
+renderHUD();
+renderMenu();
+// Open the menu on load so the first look is the menu itself.
+setTimeout(() => setOpen(true), 400);
+</script>
+</body>
+</html>
