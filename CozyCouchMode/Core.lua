@@ -32,6 +32,32 @@ function ns.Debug(...)
     end
 end
 
+-- A short diary saved to disk so we can read what happened after a /reload.
+function ns.Log(...)
+    if not ns.db then return end
+    ns.db.testLog = ns.db.testLog or {}
+    local words = {}
+    for i = 1, select("#", ...) do
+        words[i] = tostring(select(i, ...))
+    end
+    local line = date("%H:%M:%S") .. " " .. table.concat(words, " ")
+    table.insert(ns.db.testLog, line)
+    while #ns.db.testLog > 150 do
+        table.remove(ns.db.testLog, 1)
+    end
+    ns.Debug(...)
+end
+
+-- Record the real names WoW uses for controller buttons (e.g. "PADBACK").
+function ns.NoteButton(button)
+    if not ns.db then return end
+    ns.db.seenButtons = ns.db.seenButtons or {}
+    if not ns.db.seenButtons[button] then
+        ns.db.seenButtons[button] = true
+        ns.Log("first press of", button)
+    end
+end
+
 -- ---------------------------------------------------------------
 -- Input mode: are we on "gamepad" or "mouse"?
 -- ---------------------------------------------------------------
@@ -78,7 +104,9 @@ events:SetScript("OnEvent", function(self, event, ...)
         ns.db = CozyCouchModeDB
 
     elseif event == "PLAYER_LOGIN" then
+        ns.Log("--- session start ---", GetBuildInfo())
         ns.Panel:Setup()
+        ns.Menu:Setup()
         -- If a controller is already active when we log in, show right away.
         if C_GamePad and C_GamePad.IsEnabled and C_GamePad.IsEnabled()
            and not IsUsingMouse() then
@@ -107,6 +135,8 @@ SlashCmdList.COZYCOUCH = function(msg)
         ns.SetMode("gamepad")
     elseif cmd == "hide" then      -- force the panel off
         ns.SetMode("mouse")
+    elseif cmd == "menu" then
+        ns.Menu:Toggle("slash command")
     elseif cmd == "on" or cmd == "off" then
         ns.db.enabled = (cmd == "on")
         ns.Print("enabled =", tostring(ns.db.enabled))
@@ -124,6 +154,6 @@ SlashCmdList.COZYCOUCH = function(msg)
         ns.Print("current mode:", ns.mode)
     else
         ns.Print("commands: |cffffd100show|r, |cffffd100hide|r, |cffffd100on|r, "
-            .. "|cffffd100off|r, |cffffd100debug|r, |cffffd100status|r")
+            .. "|cffffd100off|r, |cffffd100debug|r, |cffffd100status|r, |cffffd100menu|r")
     end
 end
