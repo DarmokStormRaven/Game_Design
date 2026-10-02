@@ -16,6 +16,7 @@ local ADDON_NAME, ns = ...
 
 -- Settings used the very first time (before anything is saved).
 local DEFAULTS = {
+    activePreset = 1, -- remember the preset chosen in the Cozy Menu
     enabled = true,   -- master on/off switch
     debug   = false,  -- print extra info to chat while developing
 }
