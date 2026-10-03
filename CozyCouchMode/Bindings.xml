@@ -1,0 +1,7 @@
+<!-- Adds "Toggle Cozy Menu" to the game's key bindings (and ConsolePort's binding
+     screen), so the player can put it on any controller button combo. -->
+<Bindings>
+    <Binding name="COZYCOUCH_TOGGLEMENU" header="COZYCOUCH">
+        CozyCouchMenu:Toggle("key binding")
+    </Binding>
+</Bindings>

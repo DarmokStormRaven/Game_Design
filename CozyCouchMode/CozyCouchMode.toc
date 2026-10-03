@@ -4,6 +4,7 @@
 ## Author: DarmokStormRaven
 ## Version: 0.1.0
 ## SavedVariables: CozyCouchModeDB
+## Dependencies: ConsolePort
 
 # ---------------------------------------------------------------
 # This is the "table of contents" file. WoW reads it first.
@@ -13,6 +14,7 @@
 #    and put the number it prints here.
 #  - "SavedVariables" = a global table WoW saves to disk when you log out,
 #    so your settings survive restarts.
+#  - "Dependencies" = add-ons that must be loaded first (ConsolePort runs the controller buttons).
 #  - Plain lines below are the code files to load, top to bottom.
 # ---------------------------------------------------------------
 

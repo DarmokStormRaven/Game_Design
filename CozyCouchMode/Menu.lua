@@ -1,15 +1,15 @@
 -- ===============================================================
 -- Menu.lua — a cozy controller menu built from wood, parchment, and gold.
 --
--- Back opens or closes it. While open, the D-pad picks a preset,
--- the shoulder buttons change tabs, A chooses, and B closes.
+-- Open with the "Toggle Cozy Menu" key binding (set it in ConsolePort's
+-- binding screen) or /cozy menu. While open, the D-pad / A / B / LB / RB
+-- drive the menu; ConsolePort is told to leave this menu alone.
 -- Closing gives the game's buttons back. Combat keeps the menu shut.
 -- A saved diary helps us check what happened after a /reload.
 -- ===============================================================
 
 local _, ns = ...
 
-local OPEN_KEY = "PADBACK"
 local NAV_KEYS = {
     PADDLEFT = "LEFT", PADDRIGHT = "RIGHT", PAD1 = "CHOOSE", PAD2 = "CLOSE",
     PADLSHOULDER = "TABPREV", PADRSHOULDER = "TABNEXT",
@@ -46,20 +46,10 @@ tinsert(UISpecialFrames, "CozyCouchMenu")
 
 Menu.focus = 1
 Menu.tab = 1
-local needsOpenerBind = false
 local needsRelease = false
 local loggedDefaults = false
 
--- Separate owners let us release navigation without losing the Back opener.
-local openOwner = CreateFrame("Frame")
 local navOwner = CreateFrame("Frame")
-
-local opener = CreateFrame("Button", "CozyCouchMenuOpener")
-opener:RegisterForClicks("AnyDown")
-opener:SetScript("OnClick", function(self, mouseButton, down)
-    if down == false then return end
-    Menu:Toggle("Back button")
-end)
 
 local nav = CreateFrame("Button", "CozyCouchMenuNav")
 nav:RegisterForClicks("AnyDown")
@@ -486,16 +476,12 @@ end
 -- clear it (or until /reload), and your real keybinds are never changed.
 -- WoW only allows adding or clearing them OUT of combat.
 -- ---------------------------------------------------------------
-local function BindOpener()
-    if InCombatLockdown() then
-        needsOpenerBind = true
-        ns.Log("opener waits for combat to end")
-        return
+-- ConsolePort has its own on-screen cursor for menus. Ours navigates itself,
+-- so while it is open we ask ConsolePort's cursor to step aside.
+local function ObstructConsolePortCursor(state)
+    if ConsolePort and ConsolePort.SetCursorObstructor then
+        ConsolePort:SetCursorObstructor(Menu, state)
     end
-    ns.Log("before override,", OPEN_KEY, "was bound to:", GetBindingAction(OPEN_KEY))
-    SetOverrideBindingClick(openOwner, true, OPEN_KEY, "CozyCouchMenuOpener")
-    needsOpenerBind = false
-    ns.Log("opener bound to", OPEN_KEY)
 end
 
 local function TakeNavButtons()
@@ -539,6 +525,7 @@ function Menu:Open(source)
     self.focus = ns.db.activePreset or 1
     self.tab = 1
     self:Refresh()
+    ObstructConsolePortCursor(true)
     TakeNavButtons()
     self:Show()
     self.dim:Show()
@@ -555,6 +542,7 @@ function Menu:Close(reason)
     -- OnHide only fires if the menu was actually visible (not if the whole
     -- UI was hidden with Alt+Z), so release here too. Releasing twice is harmless.
     ReleaseNavButtons()
+    ObstructConsolePortCursor(false)
 end
 
 function Menu:Toggle(source)
@@ -636,6 +624,7 @@ function Menu:Setup()
         self.dim:Hide()
         -- Every way of closing must give the game's navigation buttons back.
         ReleaseNavButtons()
+        ObstructConsolePortCursor(false)
         ns.Log("closed:", self.closeReason or "Escape key or other")
         self.closeReason = nil
         -- If the whole UI was hidden (Alt+Z, a cutscene), close for real so the
@@ -651,7 +640,6 @@ function Menu:Setup()
                 ns.Toast("Combat! Menu tucked away.")
             end
         elseif event == "PLAYER_REGEN_ENABLED" then
-            if needsOpenerBind then BindOpener() end
             if needsRelease then
                 ReleaseNavButtons()
                 ns.Log("buttons released after combat")
@@ -661,6 +649,10 @@ function Menu:Setup()
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
     self:Refresh()
-    BindOpener()
-    ns.Log("menu ready")
+    -- ConsolePort automatically "adopts" menus that close with Escape (UISpecialFrames).
+    -- Opt this one out: it does its own controller navigation.
+    if ConsolePort and ConsolePort.RemoveInterfaceCursorFrame then
+        ConsolePort:RemoveInterfaceCursorFrame(self)
+    end
+    ns.Log("menu ready; Toggle Cozy Menu is on:", GetBindingKey("COZYCOUCH_TOGGLEMENU") or "nothing yet")
 end

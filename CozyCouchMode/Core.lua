@@ -14,6 +14,10 @@
 -- instead of making them global keeps us from clashing with other add-ons.
 local ADDON_NAME, ns = ...
 
+-- These display names MUST be globals: WoW looks them up by name for the binding UI.
+BINDING_HEADER_COZYCOUCH = "Cozy Couch Mode"
+BINDING_NAME_COZYCOUCH_TOGGLEMENU = "Toggle Cozy Menu"
+
 -- Settings used the very first time (before anything is saved).
 local DEFAULTS = {
     activePreset = 1, -- remember the preset chosen in the Cozy Menu
@@ -49,7 +53,7 @@ function ns.Log(...)
     ns.Debug(...)
 end
 
--- Record the real names WoW uses for controller buttons (e.g. "PADBACK").
+-- Record the real names WoW uses for controller buttons (e.g. "PAD1").
 function ns.NoteButton(button)
     if not ns.db then return end
     ns.db.seenButtons = ns.db.seenButtons or {}
@@ -68,9 +72,7 @@ function ns.SetMode(newMode)
     if newMode == ns.mode then return end   -- nothing changed, do nothing
     ns.mode = newMode
     ns.Debug("input mode ->", newMode)
-    if ns.Panel then
-        ns.Panel:SetVisible(ns.db.enabled and newMode == "gamepad")
-    end
+    -- ConsolePort's bars show the real buttons now, so the old practice diamond stays hidden.
 end
 
 -- ---------------------------------------------------------------
@@ -132,16 +134,8 @@ SLASH_COZYCOUCH2 = "/couch"
 SlashCmdList.COZYCOUCH = function(msg)
     local cmd = strtrim(msg or ""):lower()
 
-    if cmd == "show" then          -- force the panel on (for testing)
-        ns.SetMode("gamepad")
-    elseif cmd == "hide" then      -- force the panel off
-        ns.SetMode("mouse")
-    elseif cmd == "menu" then
+    if cmd == "menu" then
         ns.Menu:Toggle("slash command")
-    elseif cmd == "on" or cmd == "off" then
-        ns.db.enabled = (cmd == "on")
-        ns.Print("enabled =", tostring(ns.db.enabled))
-        ns.Panel:SetVisible(ns.db.enabled and ns.mode == "gamepad")
     elseif cmd == "debug" then
         ns.db.debug = not ns.db.debug
         ns.Print("debug =", tostring(ns.db.debug))
@@ -153,8 +147,11 @@ SlashCmdList.COZYCOUCH = function(msg)
         ns.Print("gamepad enabled:", tostring(C_GamePad and C_GamePad.IsEnabled()))
         ns.Print("GAME_PAD_ACTIVE_CHANGED event:", tostring(ns.hasActiveEvent))
         ns.Print("current mode:", ns.mode)
+        local GetMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+        ns.Print("ConsolePort:", ConsolePort and ("loaded " .. tostring(GetMeta and GetMeta("ConsolePort", "Version") or "")) or "not loaded")
+        local key = GetBindingKey("COZYCOUCH_TOGGLEMENU")
+        ns.Print("Cozy Menu button:", key or "not set yet (assign 'Toggle Cozy Menu' in ConsolePort's bindings)")
     else
-        ns.Print("commands: |cffffd100show|r, |cffffd100hide|r, |cffffd100on|r, "
-            .. "|cffffd100off|r, |cffffd100debug|r, |cffffd100status|r, |cffffd100menu|r")
+        ns.Print("commands: |cffffd100menu|r, |cffffd100status|r, |cffffd100debug|r")
     end
 end
