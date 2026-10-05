@@ -29,17 +29,18 @@ For over-stimulated players who just want to hop on and chill. Our own add-on: n
 ## Buttons (Xbox names; glyphs follow the controller automatically)
 **Always, in every vibe:**
 - LS moves, RS camera.
-- RB = Jump, RT = target nearest enemy, L3 = auto-run.
+- **A = Jump** (Ryan's choice), **RB = Interact** (talk, loot, gather).
+- RT = target nearest enemy, L3 = auto-run.
 - **LT (hold) = flip to your other set.**
 - Start = Game Menu, Back/View = Cozy Menu.
+- Inside Cozy's own menus and popups, A still means "choose / yes".
 
 **Calm set:**
-- Shared by Vibe Farming and Questing: **A = Interact** ("yes" everywhere: talk, loot, accept), B = Back/close;
-  D-pad Up = Mount, Left = Map, Down = Sit.
+- Shared by Vibe Farming and Questing: B = Back/close; D-pad Up = Mount, Left = Map, Down = Sit.
 - Vibe Farming: X = Track herbs/ore, Y = Bags, D-pad Right = Emotes.
 - Questing: X = Quest item (only when usable), Y = Quest log, D-pad Right = Bags.
 
-**Fight set:** your own action bar, with A/B/X/Y = slots 1–4, D-pad = 5–8, LB = 9.
+**Fight set:** your own action bar, with B/X/Y = slots 1–3, D-pad = 4–7, LB = 8.
 - In Vibe Farming and Questing, hold LT for the fight set.
 - In the Combat vibe the fight set is on top, and LT gives your calm set.
 
@@ -85,7 +86,14 @@ Measured on a clean profile, 5+ people including 2 outside testers:
 
 We will **not** claim "better" for things we haven't measured.
 
+## Owner decisions (2026-10-05)
+- Combat: **hold LT to flip** between the calm and fight sets (no automatic combat mapping for launch).
+- Login: **small greeting tray** that fades by itself; full picker on first login, new characters, or Back.
+- **A = Jump**, RB = Interact.
+- Code checker approved: luacheck v1.2.0. It lives in `tools/bin` (git-ignored), and its settings are in `.luacheckrc`.
+
 ## Process
+- **`tools\bin\luacheck.exe CozyCouchMode` must show 0 warnings before every commit.**
 - One task per session.
 - Every in-game session starts from a short checklist; the add-on writes pass/fail to the diary (SavedVariables), so Ryan only plays and says "done".
 - A weekly always-playable tag.
