@@ -23,4 +23,7 @@ read_globals = {
     "date", "GetAddOnMetadata", "GetBindingAction", "GetBindingKey", "GetBuildInfo",
     "InCombatLockdown", "IsUsingMouse", "SetOverrideBindingClick", "strtrim", "tinsert",
     "UIParent", "UISpecialFrames",
+    "C_CVar", "C_GamepadUI", "C_ActionBar", "issecretvalue", "IsShiftKeyDown",
+    "GetCVar", "GetCVarDefault", "SetCVar", "GetCurrentBindingSet", "SetBinding", "SaveBindings",
+    "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CLASSIC",
 }

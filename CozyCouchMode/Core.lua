@@ -47,7 +47,7 @@ function ns.Log(...)
     end
     local line = date("%H:%M:%S") .. " " .. table.concat(words, " ")
     table.insert(ns.db.testLog, line)
-    while #ns.db.testLog > 150 do
+    while #ns.db.testLog > 400 do  -- room for a whole test session (the Week 1 probe alone writes ~55 lines)
         table.remove(ns.db.testLog, 1)
     end
     ns.Debug(...)
@@ -110,6 +110,7 @@ events:SetScript("OnEvent", function(self, event, ...)
         ns.Log("--- session start ---", GetBuildInfo())
         ns.Panel:Setup()
         ns.Menu:Setup()
+        ns.Spike:Setup()
         -- If a controller is already active when we log in, show right away.
         if C_GamePad and C_GamePad.IsEnabled and C_GamePad.IsEnabled()
            and not IsUsingMouse() then
@@ -136,6 +137,11 @@ SlashCmdList.COZYCOUCH = function(msg)
 
     if cmd == "menu" then
         ns.Menu:Toggle("slash command")
+    elseif cmd == "reset" then
+        ns.Spike:Reset()
+    elseif cmd == "probe" then
+        ns.Spike:Probe()
+        ns.Print("probe written to the diary")
     elseif cmd == "debug" then
         ns.db.debug = not ns.db.debug
         ns.Print("debug =", tostring(ns.db.debug))
@@ -150,8 +156,8 @@ SlashCmdList.COZYCOUCH = function(msg)
         local GetMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
         ns.Print("ConsolePort:", ConsolePort and ("loaded " .. tostring(GetMeta and GetMeta("ConsolePort", "Version") or "")) or "not loaded")
         local key = GetBindingKey("COZYCOUCH_TOGGLEMENU")
-        ns.Print("Cozy Menu button:", key or "not set yet (assign 'Toggle Cozy Menu' in ConsolePort's bindings)")
+        ns.Print("Cozy Menu button:", key or "not set yet (the test layout puts it on Back)")
     else
-        ns.Print("commands: |cffffd100menu|r, |cffffd100status|r, |cffffd100debug|r")
+        ns.Print("commands: |cffffd100menu|r, |cffffd100status|r, |cffffd100probe|r, |cffffd100reset|r, |cffffd100debug|r")
     end
 end
