@@ -1,6 +1,7 @@
 """Build the approved Cozy Menu art as uncompressed RGBA WoW textures."""
 
 import argparse
+import math
 import os
 from pathlib import Path
 import re
@@ -50,6 +51,77 @@ def resize(image, size):
 def save(image, name, outputs):
     image.save(MEDIA / name, format="TGA")
     outputs[name] = image.size
+
+
+def build_hearth_art(outputs):
+    scale = 4
+
+    def canvas(size):
+        return Image.new("RGBA", (size * scale, size * scale))
+
+    def finish(image, name, size):
+        save(resize(image, (size, size)), name, outputs)
+
+    circle = canvas(64)
+    ImageDraw.Draw(circle).ellipse((4, 4, 251, 251), fill="white")
+    finish(circle, "circle_white.tga", 64)
+
+    gradient = Image.radial_gradient("L").resize((512, 512), Image.LANCZOS)
+    # Pillow's gradient reaches white at the corners; normalize to the radius.
+    alpha = gradient.point(lambda value: round(255 * max(0, 1 - math.sqrt(2) * value / 255) ** 1.6))
+    glow = Image.new("RGBA", (512, 512), "white")
+    glow.putalpha(alpha)
+    finish(glow, "glow_round.tga", 128)
+
+    ring = canvas(128)
+    draw = ImageDraw.Draw(ring)
+    draw.ellipse((8, 8, 503, 503), fill="white")
+    draw.ellipse((28, 28, 483, 483), fill=(0, 0, 0, 0))
+    finish(ring, "ring_thin.tga", 128)
+
+    # A blurred elliptical highlight and lower inner crescent give icons depth.
+    mask = Image.new("L", (512, 512))
+    ImageDraw.Draw(mask).ellipse((8, 8, 503, 503), fill=255)
+    highlight = Image.new("L", (512, 512))
+    ImageDraw.Draw(highlight).ellipse(
+        (256 - 248 * 0.70, 8 + 496 * 0.12,
+         256 + 248 * 0.70, 8 + 496 * 0.57), fill=round(255 * 0.22)
+    )
+    highlight = highlight.filter(ImageFilter.GaussianBlur(6 * scale))
+    shadow = Image.new("L", (512, 512))
+    shadow.putdata([
+        round(255 * 0.35 * math.exp(-((math.hypot(x + 0.5 - 256, y + 0.5 - 256) - 232) / 24) ** 2)
+              * max(0, (y + 0.5 - 256) / 248) ** 1.6)
+        for y in range(512) for x in range(512)
+    ])
+    shade = Image.new("RGBA", (512, 512), "black")
+    shade.putalpha(shadow)
+    light = Image.new("RGBA", (512, 512), "white")
+    light.putalpha(highlight)
+    shade = Image.alpha_composite(shade, light)
+    clipped = canvas(128)
+    clipped.paste(shade, (0, 0), mask)
+    finish(clipped, "socket_shade.tga", 128)
+
+    disc = Image.new("RGBA", (1024, 1024), (40, 26, 14, 0))
+    alpha = Image.new("L", disc.size)
+    alpha.putdata([
+        round(255 * 0.55 * (lambda t: t * t * (3 - 2 * t))(
+            max(0, min(1, (0.70 - math.hypot(x + 0.5 - 512, y + 0.5 - 512) / 512) / 0.25))))
+        for y in range(1024) for x in range(1024)
+    ])
+    disc.putalpha(alpha)
+    radius = 512 * 0.98
+    ImageDraw.Draw(disc).ellipse(
+        (512 - radius, 512 - radius, 511 + radius, 511 + radius),
+        outline=(185, 139, 78, round(255 * 0.18)), width=2 * scale,
+    )
+    finish(disc, "base_disc.tga", 256)
+
+    arrow = canvas(32)
+    ImageDraw.Draw(arrow).polygon(((64, 26), (102, 102), (26, 102)), fill="white")
+    for direction, angle in (("up", 0), ("down", 180), ("left", 90), ("right", 270)):
+        finish(arrow.rotate(angle), f"glyph_{direction}.tga", 32)
 
 
 def build_glyphs(outputs):
@@ -147,6 +219,7 @@ def main():
     MEDIA.mkdir(parents=True, exist_ok=True)
     outputs = {}
     try:
+        build_hearth_art(outputs)
         for source, name, size in CONVERSIONS:
             with Image.open(ART / source) as image:
                 save(resize(image.convert("RGBA"), size), name, outputs)
@@ -164,7 +237,7 @@ def main():
         copy_font()
     finally:
         self_check(outputs)
-    assert len(outputs) == 29, "Expected all 29 TGA outputs"
+    assert len(outputs) == 38, "Expected all 38 TGA outputs"
     if args.preview:
         preview(args.preview, outputs)
 
