@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cozy Hearth Bar Mockup</title>
+<!--
+  Cozy Couch Mode: controller action bar ("Hearth Bar") mockup. Design reference only, not game code.
+  Art: Ryan's licensed Wooden UI pack (shared from ../cozy-menu/art). Icons are placeholders;
+  in game the bar shows the real spell/ability icons from your action bars.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #f0b73e; --gold-hi: #ffd770; --text: #f5e8c8; --text-dim: #b8a988; --ink: #3b2410;
+  --pad-a: #7ee08f; --pad-b: #f27a6e; --pad-x: #78aef5; --pad-y: #f2d461;
+  --display: 'Melon Honey', 'Cinzel', serif; --title: 'Cinzel', serif; --body: 'Spectral', Georgia, serif;
+  /* motion tokens: enter slower than exit, all under 300ms */
+  --t-press: 140ms; --t-flip-out: 90ms; --t-flip-in: 130ms; --t-fade: 600ms;
+  /* size tokens */
+  --socket: 66px; --socket-sm: 46px; --icon: 48px; --icon-sm: 32px; --gem: 24px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #050403; color: var(--text); font-family: var(--body); overflow: hidden; }
+#wrap { position: fixed; inset: 0 0 52px 0; overflow: hidden; }
+#stage { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; overflow: hidden; background: #000; }
+.art { --a: url(../cozy-menu/art/); }
+
+/* ── Stand-in world ── */
+.world { position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 30% 22% at 72% 60%, rgba(255,186,110,.5), transparent 70%),
+    linear-gradient(180deg, #171428 0%, #2a2140 30%, #553647 50%, #a5603c 61%, #c9824a 64.6%, #2b1d14 64.8%, #18110b 100%); }
+.hill { position: absolute; border-radius: 50%; }
+.h1 { left: -12%; width: 68%; height: 260px; top: 420px; background: #2b1c22; }
+.h2 { left: 42%; width: 76%; height: 300px; top: 436px; background: #23171c; }
+.h3 { left: -6%; width: 112%; height: 380px; top: 530px; background: #130d09; }
+.tree { position: absolute; background: #150d10; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.house { position: absolute; left: 236px; top: 372px; width: 128px; height: 74px; background: #1b1116; clip-path: polygon(0 42%, 50% 0, 100% 42%, 100% 100%, 0 100%); }
+.win { position: absolute; width: 13px; height: 15px; background: #ffb65e; border-radius: 2px; box-shadow: 0 0 14px 4px rgba(255,170,70,.55); }
+.star { position: absolute; border-radius: 50%; background: #fff6dc; opacity: .6; }
+/* a soft floor-glow behind the bar so it reads on any scene (not a hard backplate) */
+.floorglow { position: absolute; left: 0; right: 0; bottom: 0; height: 260px;
+  background: radial-gradient(ellipse 46% 100% at 50% 100%, rgba(10,6,3,.72), rgba(10,6,3,0) 75%); pointer-events: none; }
+
+/* ── Hearth Bar ── */
+#hud { position: absolute; left: 230px; top: 452px; width: 820px; height: 252px; transition: opacity var(--t-fade) ease-in-out; }
+#hud.idle { opacity: .45; }
+#hud.awake { transition-duration: 150ms; }
+
+/* sockets */
+.socket { position: absolute; width: var(--socket); height: var(--socket); margin: calc(var(--socket) / -2) 0 0 calc(var(--socket) / -2);
+  border-radius: 50%; filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); }
+.socket.sm { width: var(--socket-sm); height: var(--socket-sm); margin: calc(var(--socket-sm) / -2) 0 0 calc(var(--socket-sm) / -2); }
+.socket .well { position: absolute; inset: 0; border-radius: 50%; background: url(../cozy-menu/art/Tex_Plank_12_1.png) center / 100% 100%; }
+.socket .icon { position: absolute; left: 50%; top: 50%; width: var(--icon); height: var(--icon); margin: calc(var(--icon) / -2) 0 0 calc(var(--icon) / -2);
+  border-radius: 50%; background: radial-gradient(circle at 50% 38%, #7a5636, #3a2615 62%, #22150b 100%); box-shadow: inset 0 2px 6px rgba(0,0,0,.55); overflow: hidden; display: grid; place-items: center; }
+.socket.sm .icon { width: var(--icon-sm); height: var(--icon-sm); margin: calc(var(--icon-sm) / -2) 0 0 calc(var(--icon-sm) / -2); }
+.socket .icon img { width: 86%; height: 86%; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0,0,0,.7)); transition: filter 200ms; }
+.socket .icon::before { content: ''; position: absolute; inset: 0; border-radius: 50%; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse 70% 45% at 50% 12%, rgba(255,240,210,.22), rgba(255,240,210,0) 70%);
+  box-shadow: inset 0 -6px 10px rgba(0,0,0,.35), inset 0 2px 2px rgba(255,230,190,.12); }
+.socket .ring { position: absolute; inset: -5px; background: url(../cozy-menu/art/Tex_frame_c_01.png) center / 100% 100% no-repeat; pointer-events: none; }
+.socket .rim { position: absolute; inset: -3px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,215,112,.0), 0 0 14px rgba(255,200,90,0); pointer-events: none; }
+.socket .cd { position: absolute; left: 50%; top: 50%; width: var(--icon); height: var(--icon); margin: calc(var(--icon) / -2) 0 0 calc(var(--icon) / -2);
+  border-radius: 50%; pointer-events: none; }
+.socket.sm .cd { width: var(--icon-sm); height: var(--icon-sm); margin: calc(var(--icon-sm) / -2) 0 0 calc(var(--icon-sm) / -2); }
+.socket.empty .icon img { opacity: 0; }
+.socket.empty { opacity: .5; }
+.socket.unusable .icon img { filter: grayscale(1) brightness(.55); }
+.socket.far .icon::after { content: ""; position: absolute; inset: 0; background: rgba(180,40,30,.35); mix-blend-mode: multiply; }
+.socket .lbl { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); white-space: nowrap;
+  font: 600 11px/1 var(--title); letter-spacing: .08em; text-transform: uppercase; color: var(--text);
+  background: rgba(12,8,4,.62); padding: 3px 7px; border-radius: 8px; opacity: 0; transition: opacity 200ms; pointer-events: none; }
+.labels .socket .lbl { opacity: 1; }
+
+/* glyph gems (letter or arrow on a dark gem with gold rim; shape + letter + color, never color alone) */
+.gem { position: absolute; right: -7px; bottom: -6px; width: var(--gem); height: var(--gem); border-radius: 50%; z-index: 3; display: grid; place-items: center;
+  background: radial-gradient(circle at 38% 32%, #5a3d27, #1c1008 70%);
+  box-shadow: 0 0 0 1.5px #24150a, 0 0 0 3px #b98b4e, 0 2px 4px rgba(0,0,0,.6);
+  font: 700 12px/1 var(--title); color: var(--c, var(--text)); text-shadow: 0 0 5px var(--c, transparent), 0 1px 1px #000; }
+.gem svg { width: 12px; height: 12px; }
+.g-a { --c: var(--pad-a); } .g-b { --c: var(--pad-b); } .g-x { --c: var(--pad-x); } .g-y { --c: var(--pad-y); }
+.g-d { --c: #f5e8c8; }
+
+/* cluster bases: a faint carved ring that ties four sockets together */
+.base { position: absolute; width: 212px; height: 212px; margin: -106px 0 0 -106px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(40,26,14,.55) 0 45%, rgba(40,26,14,0) 70%);
+  box-shadow: inset 0 0 0 1px rgba(185,139,78,.18); }
+
+/* inlay: a slim carved strip with gold hairlines that ties both clusters to the sign */
+.inlay { position: absolute; left: 150px; width: 520px; top: 136px; height: 28px;
+  background: linear-gradient(180deg, #3a2615, #24160b); border-top: 1px solid rgba(185,139,78,.55); border-bottom: 1px solid rgba(185,139,78,.35);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  opacity: .9; }
+
+/* trigger tabs (LT / RT) built on the socket+plank chip */
+.tab { position: absolute; width: 140px; height: 50px; background: url(../cozy-menu/art/tex_butn_plank.png) center / 100% 100% no-repeat;
+  display: flex; align-items: center; filter: drop-shadow(0 3px 4px rgba(0,0,0,.55)); transition: filter 200ms, transform 200ms; }
+.tab.right { flex-direction: row-reverse; background-image: none; }
+.tab.right::before { content: ""; position: absolute; inset: 0; background: url(../cozy-menu/art/tex_butn_plank.png) center / 100% 100% no-repeat; transform: scaleX(-1); }
+.tab .sock { position: relative; width: 50px; height: 50px; display: grid; place-items: center; flex: none; font: 700 11px/1 var(--title); color: var(--gold-hi); letter-spacing: .04em; }
+.tab .t { position: relative; flex: 1; text-align: center; font: 600 10.5px/1.15 var(--title); letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); padding: 0 6px; transition: color 200ms; }
+.tab.held { filter: drop-shadow(0 0 10px rgba(255,196,90,.55)) drop-shadow(0 3px 4px rgba(0,0,0,.55)); transform: translateY(1px); }
+.tab.held .t { color: var(--gold-hi); }
+
+/* center: medallion + sign + set pips */
+.medal { position: absolute; left: 410px; top: 112px; width: 78px; height: 78px; margin: -39px 0 0 -39px; border-radius: 50%;
+  background: url(../cozy-menu/art/Tex_circle_bg.png) center / 100% 100%; display: grid; place-items: center; z-index: 2;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); }
+.medal::after { content: ""; position: absolute; inset: -5px; background: url(../cozy-menu/art/Tex_frame_c_01.png) center / 100% 100% no-repeat; }
+.medal img { width: 48px; height: 48px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
+.medal .halo { position: absolute; inset: -12px; border-radius: 50%; pointer-events: none; transition: box-shadow 220ms ease-out;
+  box-shadow: 0 0 18px 4px rgba(214,226,255,.28); }
+.fightlive .medal .halo { box-shadow: 0 0 22px 6px rgba(255,150,60,.42); }
+.sign { position: absolute; left: 290px; top: 142px; width: 240px; height: 52px; background: url(../cozy-menu/art/Tex_Plank_12_bg.png) center / 100% 100% no-repeat;
+  filter: brightness(.82) saturate(.85) drop-shadow(0 4px 6px rgba(0,0,0,.6)); }
+.sign .name { position: absolute; left: 0; right: 0; top: 23px; text-align: center; font: 20px/1 var(--display); color: #f2b544;
+  text-shadow: 0 2px 0 #6b3d12, 0 3px 6px rgba(0,0,0,.55); }
+.pips { position: absolute; left: 270px; width: 280px; top: 206px; display: flex; justify-content: center; gap: 26px; font: 600 12px/1 var(--title);
+  letter-spacing: .14em; text-transform: uppercase; color: var(--text-dim); }
+.pip { display: flex; align-items: center; gap: 7px; transition: color 200ms; }
+.pip i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid #b98b4e; background: transparent; transition: background 200ms, box-shadow 200ms; }
+.pip.on { color: var(--gold-hi); }
+.pip.on i { background: var(--gold); box-shadow: 0 0 8px rgba(240,183,62,.7); }
+
+/* thin xp line */
+.xp { position: absolute; left: 200px; width: 420px; top: 240px; height: 5px; border-radius: 3px; background: rgba(20,12,6,.8); box-shadow: 0 0 0 1px rgba(185,139,78,.35); overflow: hidden; }
+.xp b { position: absolute; inset: 0 auto 0 0; width: 62%; background: linear-gradient(90deg, #8a5a22, #f0b73e); }
+
+/* ── mockup control bar (not part of the design) ── */
+#mockbar { position: fixed; left: 0; right: 0; bottom: 0; min-height: 52px; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 6px 14px;
+  padding: 8px 16px; background: #120c07; border-top: 1px solid #3a2e22; font: 13.5px/1.3 var(--body); color: var(--text-dim); white-space: nowrap; }
+#mockbar b { color: var(--gold); font: 700 12px/1 var(--title); letter-spacing: .14em; }
+#mockbar kbd { font: 600 11px/1 var(--title); color: var(--text); background: #2a1d12; border: 1px solid #6b4f2e; border-radius: 4px; padding: 3px 6px; }
+#pad.ok { color: var(--pad-a); }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <div class="world">
+      <div class="hill h1"></div><div class="hill h2"></div>
+      <div class="tree" style="left:120px;top:380px;width:46px;height:96px"></div>
+      <div class="tree" style="left:900px;top:392px;width:52px;height:110px"></div>
+      <div class="tree" style="left:1120px;top:403px;width:48px;height:104px"></div>
+      <div class="house"></div>
+      <div class="win" style="left:262px;top:416px"></div><div class="win" style="left:322px;top:416px"></div>
+      <div class="hill h3"></div>
+    </div>
+    <div class="floorglow"></div>
+
+    <div id="hud">
+      <div class="inlay"></div>
+      <div class="base" style="left:150px;top:150px"></div>
+      <div class="base" style="left:670px;top:150px"></div>
+      <div id="tab-lt" class="tab" style="left:22px;top:0"><div class="sock">LT</div><span class="t" id="lt-text">Fight set</span></div>
+      <div id="tab-rt" class="tab right" style="left:658px;top:0"><div class="sock">RT</div><span class="t">Target</span></div>
+      <div class="medal"><div class="halo"></div><img id="vibe-icon" alt=""></div>
+      <div class="sign"><div class="name" id="vibe-name">Questing</div></div>
+      <div class="pips"><span class="pip" id="pip-calm"><i></i>Calm</span><span class="pip" id="pip-fight"><i></i>Fight</span></div>
+      <div class="xp"><b></b></div>
+    </div>
+  </div>
+</div>
+
+<div id="mockbar">
+  <b>MOCKUP</b>
+  <span id="pad">Controller: press any button</span>
+  <span>Flip <kbd>hold LT</kbd> <kbd>hold Shift</kbd></span>
+  <span>Press <kbd>A B X Y</kbd> <kbd>1-4</kbd> <kbd>D-pad</kbd> <kbd>arrows</kbd></span>
+  <span>Vibe <kbd>V</kbd></span>
+  <span>Cooldown <kbd>C</kbd></span>
+  <span>Not usable <kbd>U</kbd></span>
+  <span>Labels <kbd>L</kbd></span>
+  <span>Calm motion <kbd>R</kbd></span>
+  <span>Idle <kbd>I</kbd></span>
+</div>
+
+<script>
+// ── Data: what each controller button does. Icons are placeholders. ─────────
+const ART = '../cozy-menu/art/';
+const ICON = {
+  jump: 'Cursor_Move1.PNG', close: 'Cursor_Hand.PNG', bags: 'Cursor_loot.PNG', questlog: 'Cursor_book.PNG',
+  mount: 'option_button.PNG', hearth: 'Cursor_Settings.PNG', sit: 'Cursor_Deff.PNG', map: 'Cursor_Production.PNG',
+  s1: 'Cursor_Attack.PNG', s2: 'Cursor_Hand2.PNG', s3: 'Cursor_Flask.PNG', s4: 'Cursor_Deff.PNG', s5: 'Cursor_Production.PNG',
+  s6: 'Cursor_Settings.PNG', s7: 'Cursor_book.PNG', s8: 'option_button.PNG', interact: 'Cursor_Hand.PNG',
+};
+const NAMES = { jump: 'Jump', close: 'Close', bags: 'Bags', questlog: 'Quest log', mount: 'Mount', hearth: 'Hearth', sit: 'Sit', map: 'Map',
+  s1: 'Slot 1', s2: 'Slot 2', s3: 'Slot 3', s4: 'Slot 4', s5: 'Slot 5', s6: 'Slot 6', s7: 'Slot 7', s8: 'Slot 8', interact: 'Interact' };
+const CALM = { A: 'jump', B: 'close', X: 'bags', Y: 'questlog', UP: 'mount', RIGHT: 'hearth', DOWN: 'sit', LEFT: 'map', LB: null, RB: 'interact' };
+const FIGHT = { A: 'jump', B: 's1', X: 's2', Y: 's3', UP: 's4', RIGHT: 's5', DOWN: 's6', LEFT: 's7', LB: 's8', RB: 'interact' };
+const VIBES = [
+  { name: 'Vibe Farming', icon: 'Cursor_Production.PNG', top: 'calm', calm: { ...CALM, Y: 'map', LEFT: 'questlog' } },
+  { name: 'Questing', icon: 'Cursor_book.PNG', top: 'calm', calm: CALM },
+  { name: 'Combat', icon: 'Cursor_Attack.PNG', top: 'fight', calm: CALM },
+];
+
+// Socket positions (HUD-local px) and glyphs. Order = flip stagger (inner → outer).
+const D = 62;
+const SOCKETS = [
+  { key: 'B', x: 670 + D, y: 150, gem: 'B', cls: 'g-b' }, { key: 'X', x: 670 - D, y: 150, gem: 'X', cls: 'g-x' },
+  { key: 'Y', x: 670, y: 150 - D, gem: 'Y', cls: 'g-y' }, { key: 'A', x: 670, y: 150 + D, gem: 'A', cls: 'g-a' },
+  { key: 'RIGHT', x: 150 + D, y: 150, gem: 'right', cls: 'g-d' }, { key: 'LEFT', x: 150 - D, y: 150, gem: 'left', cls: 'g-d' },
+  { key: 'UP', x: 150, y: 150 - D, gem: 'up', cls: 'g-d' }, { key: 'DOWN', x: 150, y: 150 + D, gem: 'down', cls: 'g-d' },
+  { key: 'LB', x: 222, y: 26, gem: 'LB', cls: 'g-d', sm: true }, { key: 'RB', x: 598, y: 26, gem: 'RB', cls: 'g-d', sm: true },
+];
+const ARROW = { up: 'M10 4l6 9H4z', down: 'M10 16L4 7h12z', left: 'M4 10l9-6v12z', right: 'M16 10L7 16V4z' };
+
+const S = { vibe: 1, lt: false, reduced: false, idleTimer: null };
+const $ = (s) => document.querySelector(s);
+const hud = $('#hud');
+const els = {};
+
+// ── Build sockets ─────────────────────────────────────────────────────────────
+SOCKETS.forEach((s) => {
+  const el = document.createElement('div');
+  el.className = 'socket' + (s.sm ? ' sm' : '');
+  el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
+  const gem = ARROW[s.gem]
+    ? `<span class="gem ${s.cls}"><svg viewBox="0 0 20 20"><path d="${ARROW[s.gem]}" fill="currentColor"/></svg></span>`
+    : `<span class="gem ${s.cls}" style="font-size:${s.gem.length > 1 ? 8.5 : 12}px">${s.gem}</span>`;
+  el.innerHTML = `<div class="well"></div><div class="icon"><img alt=""></div><div class="cd"></div><div class="ring"></div><div class="rim"></div>${gem}<span class="lbl"></span>`;
+  hud.appendChild(el);
+  els[s.key] = { el, img: el.querySelector('img'), lbl: el.querySelector('.lbl'), cd: el.querySelector('.cd'), rim: el.querySelector('.rim') };
+});
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+function setNow() {
+  const v = VIBES[S.vibe];
+  const fightOnTop = v.top === 'fight';
+  return (S.lt !== fightOnTop) ? 'fight' : 'calm';    // LT flips to the other set
+}
+function mapping(set) { const v = VIBES[S.vibe]; return set === 'fight' ? FIGHT : v.calm; }
+function paint(key, action) {
+  const e = els[key];
+  e.el.classList.toggle('empty', !action);
+  if (action) { e.img.src = ART + ICON[action]; e.lbl.textContent = NAMES[action]; } else { e.lbl.textContent = ''; }
+}
+function renderAll() {
+  const set = setNow(); const m = mapping(set);
+  SOCKETS.forEach((s) => paint(s.key, m[s.key]));
+  const v = VIBES[S.vibe];
+  $('#vibe-name').textContent = v.name;
+  $('#vibe-icon').src = ART + (set === 'fight' ? 'Cursor_Attack.PNG' : v.icon);
+  $('#pip-calm').classList.toggle('on', set === 'calm');
+  $('#pip-fight').classList.toggle('on', set === 'fight');
+  hud.classList.toggle('fightlive', set === 'fight');
+  $('#tab-lt').classList.toggle('held', S.lt);
+  $('#lt-text').textContent = v.top === 'fight' ? 'Calm set' : 'Fight set';
+}
+
+// Flip: each changing icon turns like a wooden card. Inner sockets first (15ms stagger), exit faster than enter.
+function flip() {
+  const set = setNow(); const m = mapping(set);
+  SOCKETS.forEach((s, i) => {
+    const e = els[s.key]; const action = m[s.key];
+    const icon = e.el.querySelector('.icon');
+    icon.getAnimations().forEach((a) => a.cancel());
+    if (S.reduced) {
+      icon.animate([{ opacity: .2 }, { opacity: 1 }], { duration: 140, easing: 'ease-out' });
+      paint(s.key, action); return;
+    }
+    const out = icon.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }],
+      { duration: 90, delay: i * 15, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+    out.onfinish = () => {
+      paint(s.key, action);
+      icon.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 130, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+    };
+  });
+  const medal = $('#vibe-icon');
+  medal.animate([{ opacity: .15 }, { opacity: 1 }], { duration: 160, easing: 'ease-out' });
+  const v = VIBES[S.vibe];
+  medal.src = ART + (set === 'fight' ? 'Cursor_Attack.PNG' : v.icon);
+  $('#pip-calm').classList.toggle('on', set === 'calm');
+  $('#pip-fight').classList.toggle('on', set === 'fight');
+  hud.classList.toggle('fightlive', set === 'fight');
+  $('#tab-lt').classList.toggle('held', S.lt);
+}
+
+function press(key) {
+  wake();
+  const e = els[key]; if (!e || e.el.classList.contains('empty')) return;
+  e.el.animate([{ transform: 'scale(.93) translateY(1px)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.7))' },
+                 { transform: 'none', filter: 'drop-shadow(0 4px 6px rgba(0,0,0,.6))' }], { duration: 150, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  e.rim.animate([{ boxShadow: '0 0 0 2px rgba(255,215,112,.75), 0 0 16px rgba(255,200,90,.55)' },
+                 { boxShadow: '0 0 0 2px rgba(255,215,112,0), 0 0 16px rgba(255,200,90,0)' }], { duration: 260, easing: 'ease-out' });
+}
+
+function setLT(held) {
+  if (S.lt === held) return;
+  S.lt = held; wake(); flip();
+}
+
+function cooldown(key, secs) {
+  const e = els[key]; const t0 = performance.now();
+  (function tick(now) {
+    const p = Math.min(1, (now - t0) / (secs * 1000));
+    e.cd.style.background = p < 1 ? `conic-gradient(rgba(0,0,0,0) ${p * 360}deg, rgba(8,5,2,.66) 0)` : 'none';
+    if (p < 1) requestAnimationFrame(tick);
+  })(t0);
+}
+
+// Idle: fade to 45% after 8s without input (never below .2), wake instantly on input.
+function wake() {
+  hud.classList.add('awake'); hud.classList.remove('idle');
+  clearTimeout(S.idleTimer);
+  S.idleTimer = setTimeout(() => { hud.classList.remove('awake'); hud.classList.add('idle'); }, 8000);
+}
+
+function cycleVibe() {
+  S.vibe = (S.vibe + 1) % VIBES.length; wake();
+  hud.animate([{ transform: 'translateY(6px)', opacity: .5 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  renderAll();
+}
+
+// ── Input: keyboard + controller (Gamepad API) ────────────────────────────────
+const KEYMAP = { ' ': 'A', '1': 'A', '2': 'B', '3': 'X', '4': 'Y', ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', q: 'LB', e: 'RB' };
+addEventListener('keydown', (ev) => {
+  if (ev.key === 'Shift') return setLT(true);
+  const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+  if (KEYMAP[k] || KEYMAP[ev.key]) { press(KEYMAP[k] || KEYMAP[ev.key]); ev.preventDefault(); }
+  else if (k === 'v') cycleVibe();
+  else if (k === 'c') cooldown(setNow() === 'fight' ? 'B' : 'UP', 6);
+  else if (k === 'u') els.X.el.classList.toggle('unusable');
+  else if (k === 'l') hud.classList.toggle('labels');
+  else if (k === 'r') S.reduced = !S.reduced;
+  else if (k === 'i') { clearTimeout(S.idleTimer); hud.classList.remove('awake'); hud.classList.add('idle'); }
+});
+addEventListener('keyup', (ev) => { if (ev.key === 'Shift') setLT(false); });
+
+const PADMAP = { 0: 'A', 1: 'B', 2: 'X', 3: 'Y', 4: 'LB', 5: 'RB', 12: 'UP', 13: 'DOWN', 14: 'LEFT', 15: 'RIGHT' };
+const prev = [];
+function poll() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  let gp = null; for (const p of pads) if (p && p.connected) { gp = p; break; }
+  if (gp) {
+    if (!$('#pad').classList.contains('ok')) { $('#pad').textContent = 'Controller connected'; $('#pad').classList.add('ok'); }
+    gp.buttons.forEach((b, i) => { const hit = b.pressed && !prev[i]; prev[i] = b.pressed; if (hit && PADMAP[i]) press(PADMAP[i]); if (hit && i === 7) wake(); if (hit && i === 8) cycleVibe(); });
+    const lt = gp.buttons[6] ? (gp.buttons[6].value > .5 || gp.buttons[6].pressed) : false;
+    setLT(lt);
+  }
+  requestAnimationFrame(poll);
+}
+requestAnimationFrame(poll);
+
+// ── Fit stage ─────────────────────────────────────────────────────────────────
+function fit() {
+  const wrap = $('#wrap'); wrap.style.bottom = $('#mockbar').offsetHeight + 'px';
+  const W = wrap.clientWidth, H = wrap.clientHeight, s = Math.min(W / 1280, H / 720);
+  $('#stage').style.transform = `translate(${(W - 1280 * s) / 2}px, ${(H - 720 * s) / 2}px) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+(function stars() { const w = $('.world'); for (let i = 0; i < 50; i++) { const s = document.createElement('div'); const z = Math.random() < .2 ? 2.5 : 1.5;
+  s.className = 'star'; s.style.cssText = `left:${Math.random() * 1280}px;top:${Math.random() * 280}px;width:${z}px;height:${z}px`; w.insertBefore(s, w.firstChild); } })();
+renderAll(); wake();
+</script>
+</body>
+</html>
