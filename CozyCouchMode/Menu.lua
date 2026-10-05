@@ -18,14 +18,14 @@ local MEDIA = "Interface\\AddOns\\CozyCouchMode\\Media\\"
 local DISPLAY_FONT = MEDIA .. "Fonts\\MelonHoney.ttf"
 local LABEL_FONT = "Fonts\\FRIZQT__.TTF"
 
--- Button labels are placeholders; real spells come in a later step.
+-- Card labels share the same source as the actual controller layouts.
 local PRESETS = {
     { name = "Vibe Farming", tag = "Herbs, ore and slow sunsets.", icon = "icon_gather",
-      map = { A = "Interact", B = "Jump", X = "Gather", Y = "Bags" } },
+      map = ns.Vibes[1].labels },
     { name = "Questing", tag = "Chat with folks, follow the trail.", icon = "icon_book",
-      map = { A = "Interact", B = "Jump", X = "Quest item", Y = "Quest log" } },
+      map = ns.Vibes[2].labels },
     { name = "Combat", tag = "For when the tavern gets rowdy.", icon = "icon_sword",
-      map = { A = "Attack", B = "Defend", X = "Big hit", Y = "Heal" } },
+      map = ns.Vibes[3].labels },
 }
 local HEADINGS = { "How are we playing tonight?", "Make it yours", "Pick a vibe", "Little comforts" }
 local SOON = {
@@ -569,6 +569,8 @@ function Menu:Nav(action)
         if self.tab == 1 then
             local name = PRESETS[self.focus].name
             ns.db.activePreset = self.focus
+            ns.Binder:Apply("vibe change")
+            ns.HUD:OnVibeChanged()
             self.busy = true
             self:Refresh()
             ns.Toast(name .. " is on. Enjoy.")

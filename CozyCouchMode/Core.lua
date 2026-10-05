@@ -23,6 +23,9 @@ local DEFAULTS = {
     activePreset = 1, -- remember the preset chosen in the Cozy Menu
     enabled = true,   -- master on/off switch
     debug   = false,  -- print extra info to chat while developing
+    hudScale = 1,
+    calmMotion = false,
+    hideKeyboardBars = true,
 }
 
 -- Short helper to print a colored message in the chat window.
@@ -71,8 +74,8 @@ ns.mode = "mouse"
 function ns.SetMode(newMode)
     if newMode == ns.mode then return end   -- nothing changed, do nothing
     ns.mode = newMode
+    if ns.HUD then ns.HUD:SetActive(newMode == "gamepad") end
     ns.Debug("input mode ->", newMode)
-    -- ConsolePort's bars show the real buttons now, so the old practice diamond stays hidden.
 end
 
 -- ---------------------------------------------------------------
@@ -110,6 +113,9 @@ events:SetScript("OnEvent", function(self, event, ...)
         ns.Log("--- session start ---", GetBuildInfo())
         ns.Panel:Setup()
         ns.Menu:Setup()
+        -- The bar is the newest piece: if it ever errors, log it and keep the rest of Cozy working.
+        local ok, err = pcall(ns.HUD.Setup, ns.HUD)
+        if not ok then ns.Log("hud: ERROR " .. tostring(err)) end
         ns.Spike:Setup()
         -- If a controller is already active when we log in, show right away.
         if C_GamePad and C_GamePad.IsEnabled and C_GamePad.IsEnabled()
@@ -153,6 +159,8 @@ SlashCmdList.COZYCOUCH = function(msg)
         ns.Print("gamepad enabled:", tostring(C_GamePad and C_GamePad.IsEnabled()))
         ns.Print("GAME_PAD_ACTIVE_CHANGED event:", tostring(ns.hasActiveEvent))
         ns.Print("current mode:", ns.mode)
+        ns.Print("active vibe:", (ns.Vibes[ns.db.activePreset] or ns.Vibes[1]).name)
+        ns.Print("hide keyboard bars:", tostring(ns.db.hideKeyboardBars))
         local GetMeta = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
         ns.Print("ConsolePort:", ConsolePort and ("loaded " .. tostring(GetMeta and GetMeta("ConsolePort", "Version") or "")) or "not loaded")
         local key = GetBindingKey("COZYCOUCH_TOGGLEMENU")

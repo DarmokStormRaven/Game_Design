@@ -26,4 +26,6 @@ read_globals = {
     "C_CVar", "C_GamepadUI", "C_ActionBar", "issecretvalue", "IsShiftKeyDown",
     "GetCVar", "GetCVarDefault", "SetCVar", "GetCurrentBindingSet", "SetBinding", "SaveBindings",
     "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CLASSIC",
+    "CreateColor", "GetActionTexture", "GetActionCooldown", "IsUsableAction", "IsActionInRange",
+    "UnitXP", "UnitXPMax", "UnitLevel", "GetMaxPlayerLevel",
 }

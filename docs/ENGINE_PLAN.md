@@ -86,6 +86,28 @@ Measured on a clean profile, 5+ people including 2 outside testers:
 
 We will **not** claim "better" for things we haven't measured.
 
+## Progress
+- **Week 1 proof (2026-10-05):**
+  - Passed, per the in-game diary:
+    - All 19 test bindings wrote and read back.
+    - Hold LT (emulated Shift) works in and out of combat.
+    - Bindings survive combat.
+    - The Back button opens the Cozy Menu.
+    - Settings are saved and restored.
+    - The death popup was handled.
+  - Facts learned:
+    - The game's own defaults already put Shift on LT.
+    - Blizzard_GamepadSmartNavigation and C_GamepadUI exist.
+    - issecretvalue and action-cooldown duration objects exist.
+    - WOW_PROJECT_ID is 18.
+  - **Not yet exercised:** quest accept/turn-in and vendor with the pad.
+- **Pulled forward from week 2 (2026-10-05):**
+  - Real Binder with 3 switchable vibes.
+  - Picker wired to them.
+  - The **Hearth Bar**: a controller-shaped action bar in the Tavern style that reads live bindings, flips on LT, shows
+    cooldown/usable/range, idles to 45%, and hides the keyboard bars in controller mode.
+  - Design reference: `mockups/cozy-hud/index.html`.
+
 ## Owner decisions (2026-10-05)
 - Combat: **hold LT to flip** between the calm and fight sets (no automatic combat mapping for launch).
 - Login: **small greeting tray** that fades by itself; full picker on first login, new characters, or Back.

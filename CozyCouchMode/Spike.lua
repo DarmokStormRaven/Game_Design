@@ -30,27 +30,6 @@ local MANAGED = {
     { "SoftTargetInteract", "1" },
     { "autoLootDefault", "1" },
 }
-local LAYOUT = {
-    { "PAD1", "JUMP" },
-    { "PADRSHOULDER", "INTERACTTARGET" },
-    { "PADRTRIGGER", "TARGETNEARESTENEMY" },
-    { "PADLSTICK", "TOGGLEAUTORUN" },
-    { "PADFORWARD", "TOGGLEGAMEMENU" },
-    { "PADBACK", "COZYCOUCH_TOGGLEMENU" },
-    { "PAD2", "TOGGLEGAMEMENU" },
-    { "PAD3", "OPENALLBAGS" },
-    { "PAD4", "TOGGLEQUESTLOG" },
-    { "PADDLEFT", "TOGGLEWORLDMAP" },
-    { "PADDDOWN", "SITORSTAND" },
-    { "SHIFT-PAD2", "ACTIONBUTTON1" },
-    { "SHIFT-PAD3", "ACTIONBUTTON2" },
-    { "SHIFT-PAD4", "ACTIONBUTTON3" },
-    { "SHIFT-PADDUP", "ACTIONBUTTON4" },
-    { "SHIFT-PADDRIGHT", "ACTIONBUTTON5" },
-    { "SHIFT-PADDDOWN", "ACTIONBUTTON6" },
-    { "SHIFT-PADDLEFT", "ACTIONBUTTON7" },
-    { "SHIFT-PADLSHOULDER", "ACTIONBUTTON8" },
-}
 local WINDOWS = {
     "GossipFrame", "QuestFrame", "MerchantFrame", "LootFrame", "StaticPopup1", "MailFrame",
     "TaxiFrame", "BankFrame", "ContainerFrame1", "GameMenuFrame",
@@ -142,39 +121,6 @@ local function ApplySettings()
     end
 end
 
-local function ApplyLayout()
-    if InCombatLockdown() then pending = true; return end
-    if ConsolePort ~= nil then return end
-    ns.db.cozyBindings = ns.db.cozyBindings or {}
-    for _, binding in ipairs(LAYOUT) do
-        local chord, action = binding[1], binding[2]
-        local current = GetBindingAction(chord)
-        if current == "" or ns.db.cozyBindings[chord] ~= nil then
-            local ok = SetBinding(chord, action)
-            if ok == false then
-                ns.Log("bind: SETFAIL " .. chord)
-            else
-                ns.db.cozyBindings[chord] = action
-            end
-        else
-            ns.Log("bind: SKIP " .. chord .. " (player has " .. tostring(current) .. ")")
-        end
-    end
-    SaveBindings(GetCurrentBindingSet())
-    local passes = 0
-    for _, binding in ipairs(LAYOUT) do
-        local chord, action = binding[1], binding[2]
-        local actual = GetBindingAction(chord)
-        if actual == action then
-            passes = passes + 1
-            ns.Log("bind: PASS " .. chord .. " = " .. action)
-        else
-            ns.Log("bind: FAIL " .. chord .. " wanted " .. action .. " got " .. tostring(actual))
-        end
-    end
-    ns.Log("bind: " .. passes .. "/" .. #LAYOUT .. " pass")
-end
-
 local function SpotCheck()
     ns.Log("combat: PAD1 = " .. tostring(GetBindingAction("PAD1")))
     ns.Log("combat: SHIFT-PAD2 = " .. tostring(GetBindingAction("SHIFT-PAD2")))
@@ -222,7 +168,7 @@ local function ApplyPending()
     if InCombatLockdown() then pending = true; return end
     if ns.db.spikeDisabled or ConsolePort ~= nil then pending = false; return end
     ApplySettings()
-    ApplyLayout()
+    ns.Binder:Apply("login")
     StartListening()
     pending = false
 end
@@ -274,7 +220,7 @@ function Spike:Reset()
         local ok = SetBinding(chord)
         if ok == false then ns.Log("bind: SETFAIL " .. chord) end
     end
-    SaveBindings(GetCurrentBindingSet())
+    ns.Binder:Save()
     ns.db.savedCVars = nil
     ns.db.cozyBindings = nil
     ns.db.spikeDisabled = true

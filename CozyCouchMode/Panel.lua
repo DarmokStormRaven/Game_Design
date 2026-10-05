@@ -88,6 +88,7 @@ end
 local function OnButtonDown(button)
     ns.SetMode("gamepad")               -- any controller press = gamepad mode
     ns.NoteButton(button)
+    if ns.HUD then ns.HUD:Press(button) end
     local orb = orbs[button]
     if not orb then return end          -- a button we don't draw (yet)
     orb.glow:SetAlpha(0.9)

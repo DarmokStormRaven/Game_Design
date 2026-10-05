@@ -17,6 +17,9 @@
 # ---------------------------------------------------------------
 
 Core.lua
+Vibes.lua
 Panel.lua
+Binder.lua
 Menu.lua
+HUD.lua
 Spike.lua
