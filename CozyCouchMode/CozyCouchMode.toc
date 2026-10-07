@@ -20,8 +20,6 @@ Core.lua
 Vibes.lua
 Panel.lua
 Binder.lua
-Buttons.lua
 Menu.lua
-Windows.lua
 HUD.lua
 Spike.lua

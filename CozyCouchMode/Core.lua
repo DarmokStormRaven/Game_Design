@@ -26,7 +26,6 @@ local DEFAULTS = {
     hudScale = 1,
     calmMotion = false,
     hideKeyboardBars = true,
-    customBindings = {}, -- per-vibe handy-button choices from the Buttons editor
 }
 
 -- Short helper to print a colored message in the chat window.
@@ -117,9 +116,6 @@ events:SetScript("OnEvent", function(self, event, ...)
         -- The bar is the newest piece: if it ever errors, log it and keep the rest of Cozy working.
         local ok, err = pcall(ns.HUD.Setup, ns.HUD)
         if not ok then ns.Log("hud: ERROR " .. tostring(err)) end
-        -- Same safety net for the quest/vendor windows.
-        ok, err = pcall(ns.Windows.Setup, ns.Windows)
-        if not ok then ns.Log("windows: ERROR " .. tostring(err)) end
         ns.Spike:Setup()
         -- If a controller is already active when we log in, show right away.
         if C_GamePad and C_GamePad.IsEnabled and C_GamePad.IsEnabled()

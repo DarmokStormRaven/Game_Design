@@ -96,35 +96,6 @@ function Spike:Probe()
         end
     end
     ns.Log("probe: " .. empty .. " of " .. (#PAD_KEYS * #PREFIXES) .. " controller chords are empty")
-    -- Look up optional beta APIs by name so a missing namespace stays harmless.
-    local function ApiType(path)
-        local namespace, member = path:match("^([^.]+)%.(.+)$")
-        local value = namespace and _G[namespace] or _G[path]
-        if namespace then value = type(value) == "table" and value[member] or nil end
-        return tostring(type(value))
-    end
-    local function Types(label, names)
-        local line = "probe: " .. label
-        for _, name in ipairs(names) do line = line .. " " .. name .. "=" .. ApiType(name) end
-        ns.Log(line)
-    end
-    ns.Log("probe: Flavor WOW_PROJECT_ID=" .. tostring(_G["WOW_PROJECT_ID"])
-        .. " WOW_PROJECT_CAMELOT=" .. tostring(_G["WOW_PROJECT_CAMELOT"])
-        .. " Enum.SpellBookSpellBank=" .. ApiType("Enum.SpellBookSpellBank"))
-    Types("Spellbook", { "C_SpellBook", "C_SpellBook.GetNumSpellBookSkillLines", "C_SpellBook.GetSpellBookItemInfo",
-        "C_SpellBook.PickupSpellBookItem", "GetNumSpellTabs", "GetSpellInfo" })
-    Types("Cursor API", { "PlaceAction", "PickupAction", "ClearCursor", "GetCursorInfo", "C_Spell.PickupSpell", "C_Item.PickupItem" })
-    Types("Items", { "C_Container.GetContainerItemInfo", "C_Item.GetItemSpell", "C_Item.GetItemNameByID",
-        "C_Item.IsUsableItem", "NUM_BAG_SLOTS" })
-    Types("Mounts", { "C_MountJournal", "GetNumCompanions" })
-    Types("Gossip", { "C_GossipInfo", "C_GossipInfo.GetOptions", "C_GossipInfo.SelectOptionByIndex",
-        "C_GossipInfo.SelectAvailableQuest", "C_GossipInfo.CloseGossip" })
-    Types("Quest", { "AcceptQuest", "CompleteQuest", "GetQuestReward", "GetNumQuestChoices", "GetQuestItemInfo",
-        "GetRewardMoney", "GetRewardXP", "GetQuestMoneyToGet", "QuestFlagsPVP", "QuestGetAutoAccept",
-        "AcknowledgeAutoAcceptQuest", "CloseQuest", "GetGreetingText", "GetAvailableTitle" })
-    Types("Merchant", { "C_MerchantFrame", "C_MerchantFrame.GetItemInfo", "C_MerchantFrame.SellAllJunkItems", "GetMerchantItemInfo",
-        "BuyMerchantItem", "GetRepairAllCost", "RepairAllItems", "GetNumBuybackItems", "BuybackItem", "CloseMerchant",
-        "C_Container.UseContainerItem", "GetCoinTextureString" })
 end
 
 local function ApplySettings()
@@ -210,8 +181,10 @@ local function Observe()
             Protected(function()
                 if event == "PLAYER_REGEN_DISABLED" then
                     ns.Log("combat: start")
+                    SpotCheck()
                 elseif event == "PLAYER_REGEN_ENABLED" then
                     ns.Log("combat: end")
+                    SpotCheck()
                     if pending then ApplyPending() end
                 elseif event == "PLAYER_DEAD" then
                     ns.Log("life: died")

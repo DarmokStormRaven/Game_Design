@@ -28,16 +28,4 @@ read_globals = {
     "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CLASSIC",
     "CreateColor", "GetActionTexture", "GetActionCooldown", "IsUsableAction", "IsActionInRange",
     "UnitXP", "UnitXPMax", "UnitLevel", "GetMaxPlayerLevel",
-    "C_SpellBook", "C_Spell", "C_Item", "C_Container", "Enum", "NUM_BAG_SLOTS",
-    "GetActionInfo", "GetActionText", "ClearCursor", "GetCursorInfo", "PlaceAction", "PickupAction", "PickupItem",
-    -- Native window APIs used by the parallel Windows module.
-    "GetCoinTextureString", "GossipFrame", "MerchantFrame", "QuestFrame", "SetGamePadCursorControl",
-    "C_GossipInfo", "CloseGossip", "CloseQuest", "CloseMerchant", "GetNumAvailableQuests", "GetAvailableTitle",
-    "GetNumActiveQuests", "GetActiveTitle", "GetNumQuestChoices", "GetNumQuestItems", "GetNumQuestRewards",
-    "GetQuestItemInfo", "GetRewardMoney", "GetRewardXP", "C_MerchantFrame", "GetMerchantItemInfo",
-    "GetMerchantNumItems", "GetNumBuybackItems", "GetBuybackItemInfo", "GetMoney", "CanMerchantRepair",
-    "GetRepairAllCost", "GetGreetingText", "GetTitleText", "GetQuestText", "GetObjectiveText", "GetProgressText",
-    "GetRewardText", "SelectAvailableQuest", "SelectActiveQuest", "QuestFlagsPVP", "QuestGetAutoAccept",
-    "AcknowledgeAutoAcceptQuest", "AcceptQuest", "IsQuestCompletable", "CompleteQuest", "GetQuestMoneyToGet",
-    "GetQuestReward", "BuyMerchantItem", "BuybackItem", "RepairAllItems", "GetTime", "UnitName",
 }

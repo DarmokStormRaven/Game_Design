@@ -41,14 +41,7 @@ function Binder:Apply(reason)
         ns.Log("binder: binding API unavailable")
         return
     end
-    local index = ns.db.activePreset or 1
-    local wanted = ns.Vibes:BuildBindings(index)
-    local custom = ns.db.customBindings and ns.db.customBindings[index]
-    if custom then
-        for chord, action in pairs(custom) do
-            if wanted[chord] ~= nil then wanted[chord] = action end
-        end
-    end
+    local wanted = ns.Vibes:BuildBindings(ns.db.activePreset or 1)
     ns.db.cozyBindings = ns.db.cozyBindings or {}
     local owned = ns.db.cozyBindings
     for chord, action in pairs(wanted) do
