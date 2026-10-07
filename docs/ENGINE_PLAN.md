@@ -108,6 +108,17 @@ We will **not** claim "better" for things we haven't measured.
     cooldown/usable/range, idles to 45%, and hides the keyboard bars in controller mode.
   - Design reference: `mockups/cozy-hud/index.html`.
 
+- **2026-10-06, built from Ryan's request ("how do I swap buttons and use menus?"):**
+  - **Buttons tab** in the Cozy Menu (design: `mockups/cozy-buttons/index.html`).
+    - Swap spells and items onto action slots with the controller (spellbook and bags via the C_* APIs, out of combat only).
+    - Swap handy actions per vibe.
+    - A/RB are locked; LT toggles Calm/Fight.
+  - **Cozy talk / quest / shop windows** (design: `mockups/cozy-windows/index.html`).
+    - Blizzard's frames are only faded; quest/merchant APIs are driven directly.
+    - Sell junk, repair all, buy, sell and buy back.
+    - PvP and paid quests are handed back to the regular window.
+  - Not yet tested in game.
+
 ## Owner decisions (2026-10-05)
 - Combat: **hold LT to flip** between the calm and fight sets (no automatic combat mapping for launch).
 - Login: **small greeting tray** that fades by itself; full picker on first login, new characters, or Back.

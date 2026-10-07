@@ -13,6 +13,10 @@ local _, ns = ...
 local NAV_KEYS = {
     PADDLEFT = "LEFT", PADDRIGHT = "RIGHT", PAD1 = "CHOOSE", PAD2 = "CLOSE",
     PADLSHOULDER = "TABPREV", PADRSHOULDER = "TABNEXT",
+    PADDUP = "UP", PADDDOWN = "DOWN", PAD3 = "XBUTTON", PAD4 = "YBUTTON",
+    ["SHIFT-PADDLEFT"] = "LEFT", ["SHIFT-PADDRIGHT"] = "RIGHT", ["SHIFT-PAD1"] = "CHOOSE", ["SHIFT-PAD2"] = "CLOSE",
+    ["SHIFT-PADLSHOULDER"] = "TABPREV", ["SHIFT-PADRSHOULDER"] = "TABNEXT",
+    ["SHIFT-PADDUP"] = "UP", ["SHIFT-PADDDOWN"] = "DOWN", ["SHIFT-PAD3"] = "XBUTTON", ["SHIFT-PAD4"] = "YBUTTON",
 }
 local MEDIA = "Interface\\AddOns\\CozyCouchMode\\Media\\"
 local DISPLAY_FONT = MEDIA .. "Fonts\\MelonHoney.ttf"
@@ -29,7 +33,6 @@ local PRESETS = {
 }
 local HEADINGS = { "How are we playing tonight?", "Make it yours", "Pick a vibe", "Little comforts" }
 local SOON = {
-    [2] = { icon = "icon_move", title = "Your Layout", text = "Move and resize your buttons, right from the couch." },
     [3] = { icon = "icon_gem", title = "Look & Feel", text = "Themes, glow, and how gently things fade in and out." },
     [4] = { icon = "icon_gear", title = "Settings", text = "Choose the menu button, sounds, and other small comforts." },
 }
@@ -37,7 +40,7 @@ local PAD_COLORS = {
     A = { 0.49, 0.88, 0.56 }, B = { 0.95, 0.48, 0.43 },
     X = { 0.47, 0.68, 0.96 }, Y = { 0.95, 0.83, 0.38 },
 }
-local TAB_NAMES = { "Presets", "Layout", "Look", "Settings" }
+local TAB_NAMES = { "Vibes", "Buttons", "Look", "Settings" }
 
 local Menu = CreateFrame("Frame", "CozyCouchMenu", UIParent)
 Menu:Hide()  -- Hide before installing OnHide so loading isn't logged as closing.
@@ -351,8 +354,10 @@ local function BuildSoon(self)
 end
 
 local function BuildHints(self)
+    self.hints = {}
     for i, name in ipairs({ "MOVE", "CHOOSE", "CLOSE", "TABS" }) do
         local chip = CreateFrame("Frame", nil, self)
+        self.hints[i] = chip
         chip:SetFrameLevel(self:GetFrameLevel() + 3)
         chip:SetSize(130, 52)
         chip:SetPoint("TOP", self, "TOP", (i - 2.5) * 146, -548)
@@ -460,7 +465,9 @@ function Menu:Refresh()
         if newlyActive and self.busy then card.pop:Play() end
     end
     local soon = SOON[self.tab]
-    self.comingLater:SetShown(self.tab ~= 1)
+    self.comingLater:SetShown(soon ~= nil)
+    if self.tab == 2 then ns.Buttons:Show() else ns.Buttons:Hide() end
+    for _, chip in ipairs(self.hints) do chip:SetShown(self.tab ~= 2) end
     if soon then
         self.comingLater.medal.icon:SetTexture(MEDIA .. soon.icon .. ".tga")
         self.comingLater.title:SetText(soon.title)
@@ -521,6 +528,8 @@ function Menu:Open(source)
         ns.Log("open blocked (combat) via", source)
         return
     end
+    -- Only one thing borrows the controller at a time: end any NPC window first.
+    if ns.Windows and ns.Windows:IsOpen() then ns.Windows:CloseAll("menu opened") end
     self.busy = false
     self.focus = ns.db.activePreset or 1
     self.tab = 1
@@ -557,6 +566,10 @@ function Menu:Nav(action)
     if not self:IsShown() then return end
     if self.busy then return end
     ns.Log("press", action)
+    if self.tab == 2 and ns.Buttons:HandleNav(action) then
+        self:Refresh()
+        return
+    end
     if action == "LEFT" then
         if self.tab == 1 then self.focus = Wrap(self.focus - 1, 3) end
     elseif action == "RIGHT" then
@@ -594,6 +607,10 @@ end
 -- ---------------------------------------------------------------
 -- Setup: called once from Core.lua after login.
 -- ---------------------------------------------------------------
+function Menu:OnPadButton(button)
+    if self:IsShown() and self.tab == 2 and button == "PADLTRIGGER" then ns.Buttons:ToggleSet() end
+end
+
 function Menu:Setup()
     self:SetSize(920, 660)
     self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -650,6 +667,10 @@ function Menu:Setup()
     end)
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    -- Build the Buttons editor last and safely: if it ever errors, the menu itself
+    -- (and its button release on close) must still be complete.
+    local built, err = pcall(ns.Buttons.Build, ns.Buttons, self)
+    if not built then ns.Log("buttons: ERROR " .. tostring(err)) end
     self:Refresh()
     -- ConsolePort automatically "adopts" menus that close with Escape (UISpecialFrames).
     -- Opt this one out: it does its own controller navigation.
