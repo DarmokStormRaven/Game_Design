@@ -22,4 +22,5 @@ Panel.lua
 Binder.lua
 Menu.lua
 HUD.lua
+Cursor.lua
 Spike.lua

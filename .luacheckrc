@@ -19,10 +19,12 @@ globals = {
 -- WoW API we only read. Add new names here when the code starts using them;
 -- an unknown name usually means a typo or an API that doesn't exist.
 read_globals = {
+    "UIPanelWindows", "SetOverrideBinding", "GetCursorInfo", "ClearCursor", "PickupAction",
+    "C_Container", "C_SpellBook", "C_Spell", "GameTooltip", "SetGamePadCursorControl", "SpellBook_GetSpellBookSlot",
     "C_AddOns", "C_GamePad", "C_Timer", "ClearOverrideBindings", "ConsolePort", "CreateFrame",
     "date", "GetAddOnMetadata", "GetBindingAction", "GetBindingKey", "GetBuildInfo",
     "InCombatLockdown", "IsUsingMouse", "SetOverrideBindingClick", "strtrim", "tinsert",
-    "UIParent", "UISpecialFrames",
+    "UIParent", "UISpecialFrames", "WorldFrame", "RegisterStateDriver", "GetTime", "wipe",
     "C_CVar", "C_GamepadUI", "C_ActionBar", "issecretvalue", "IsShiftKeyDown",
     "GetCVar", "GetCVarDefault", "SetCVar", "GetCurrentBindingSet", "SetBinding", "SaveBindings",
     "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CLASSIC",

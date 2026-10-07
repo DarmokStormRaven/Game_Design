@@ -494,6 +494,7 @@ local function TakeNavButtons()
     end
     for key, action in pairs(NAV_KEYS) do
         SetOverrideBindingClick(navOwner, true, key, "CozyCouchMenuNav", action)
+        SetOverrideBindingClick(navOwner, true, "SHIFT-" .. key, "CozyCouchMenuNav", action)
     end
 end
 

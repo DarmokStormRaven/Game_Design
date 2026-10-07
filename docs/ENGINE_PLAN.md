@@ -1,6 +1,6 @@
 # Cozy Couch Mode: engine plan (v2, after adversarial review)
 
-_Last updated: 2026-10-05. Owner: Ryan. This is the plan of record for building Cozy's own controller engine._
+_Last updated: 2026-10-06. Owner: Ryan. This is the plan of record for building Cozy's own controller engine._
 
 ## The goal in one line
 Log in → pick a cozy vibe → play. No setup, no wizard. Everything fiddly lives behind a gear icon.
@@ -107,6 +107,12 @@ We will **not** claim "better" for things we haven't measured.
   - The **Hearth Bar**: a controller-shaped action bar in the Tavern style that reads live bindings, flips on LT, shows
     cooldown/usable/range, idles to 45%, and hides the keyboard bars in controller mode.
   - Design reference: `mockups/cozy-hud/index.html`.
+- **Snap cursor for Blizzard's own windows (2026-10-06):**
+  - `Cursor.lua`: D-pad snaps a gold highlight (the GM panel's slot frame) between the buttons of WoW's existing windows.
+  - Controls: A click, X right-click, Y pick up / drop spells and items, B close, LB/RB switch windows.
+  - It replaces nothing: Blizzard's frames are only read, and clicks go through a secure proxy.
+  - Combat-safe: bindings are owned by the proxy and cleared by a secure combat state driver.
+  - Status: two independent code reviews passed. **Not yet tested in game.**
 
 ## Owner decisions (2026-10-05)
 - Combat: **hold LT to flip** between the calm and fight sets (no automatic combat mapping for launch).

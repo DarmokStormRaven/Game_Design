@@ -439,12 +439,17 @@ function HUD:OnVibeChanged()
     self.deal:Play()
 end
 
+function HUD:SetKeyboardBarsForced(on)
+    self.keyboardBarsForced = on
+    self:SetActive(ns.mode == "gamepad")
+end
+
 function HUD:SetActive(isGamepad)
     if not self.ready then return end
     -- ConsolePort draws its own bars and owns the pad; stay out of its way entirely.
     if ConsolePort ~= nil then self:Hide(); return end
     if isGamepad then self:Show(); self:Refresh() else self:Hide() end
-    local alpha = isGamepad and ns.db.hideKeyboardBars ~= false and 0 or 1
+    local alpha = not self.keyboardBarsForced and isGamepad and ns.db.hideKeyboardBars ~= false and 0 or 1
     for _, name in ipairs(BARS) do
         local bar = _G[name]
         if bar and type(bar.SetAlpha) == "function" then bar:SetAlpha(alpha) end

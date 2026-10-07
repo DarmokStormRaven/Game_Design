@@ -41,6 +41,8 @@ CONVERSIONS = [
     ("Cursor_Flask.PNG", "icon_flask.tga", (64, 64)),
     ("Cursor_Deff.PNG", "icon_shield.tga", (64, 64)),
     ("option_button.PNG", "icon_gem.tga", (128, 128)),
+    # The GM panel's gold item-slot frame; the snap cursor uses it as its highlight.
+    ("Tex_frame_s_01.png", "slot_frame.tga", (256, 256)),
 ]
 
 
@@ -212,12 +214,28 @@ def preview(path, outputs):
     print(f"Preview: {path}")
 
 
+def build_focus_frame(outputs):
+    mask = Image.new("L", (128, 128))
+    ImageDraw.Draw(mask).rounded_rectangle((12, 12, 115, 115), radius=18, outline=153, width=4)
+    glow = Image.new("RGBA", (128, 128), (255, 190, 80, 0))
+    glow.putalpha(mask.filter(ImageFilter.GaussianBlur(6)))
+    draw = ImageDraw.Draw(glow)
+    draw.rounded_rectangle((12, 12, 115, 115), radius=18, outline=(255, 215, 112, 255), width=4)
+    draw.rounded_rectangle((16, 16, 111, 111), radius=14, fill=(0, 0, 0, 0))
+    save(glow, "focus_frame.tga", outputs)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preview", type=Path, help="Optional PNG contact sheet (relative to repo root)")
+    parser.add_argument("--focus-only", action="store_true", help="Build and check only the cursor texture")
     args = parser.parse_args()
     MEDIA.mkdir(parents=True, exist_ok=True)
     outputs = {}
+    build_focus_frame(outputs)
+    if args.focus_only:
+        self_check(outputs)
+        return
     try:
         build_hearth_art(outputs)
         for source, name, size in CONVERSIONS:
@@ -237,7 +255,7 @@ def main():
         copy_font()
     finally:
         self_check(outputs)
-    assert len(outputs) == 38, "Expected all 38 TGA outputs"
+    assert len(outputs) == 40, "Expected all 40 TGA outputs"
     if args.preview:
         preview(args.preview, outputs)
 
